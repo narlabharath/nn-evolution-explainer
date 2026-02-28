@@ -994,6 +994,18 @@ flowchart LR
       <div class="era-body">
         <div class="era-tagline">"Fast tensor math, but training is manual."</div>
 
+        <div class="callout callout-mental">
+          <div class="callout-title">🧠 Mental model — cooking from scratch, grinding your own flour</div>
+          <p>Full control over every step — but every new architecture means re-deriving every gradient formula by hand. Like a maths exam where no calculator is allowed: change the question, re-derive the answer.</p>
+          <table>
+            <tr><th>Analogy</th><th>What it maps to technically</th></tr>
+            <tr><td>"Show all your working"</td><td>Hand-code <code>dL/dW</code> using the chain rule for every layer</td></tr>
+            <tr><td>"Change the question"</td><td>Modify the architecture (add a layer, change activation)</td></tr>
+            <tr><td>"Re-derive from scratch"</td><td>Rewrite all gradient formulas — nothing is reused automatically</td></tr>
+            <tr><td>"No calculator allowed"</td><td>No autodiff engine — NumPy doesn't know what a gradient is</td></tr>
+          </table>
+        </div>
+
         <!-- Row A: context + superpower -->
         <div class="two-col">
           <div>
@@ -1115,6 +1127,18 @@ print("loss:", round(float(loss), 4))</code></pre>
       <div class="era-body">
         <div class="era-tagline">"Define a computation graph, then run it — autograd arrives."</div>
 
+        <div class="callout callout-mental">
+          <div class="callout-title">🧠 Mental model — writing a recipe book, then sealing it and handing it to a chef in a back kitchen</div>
+          <p>You describe the entire computation upfront. The engine runs it. You get zero feedback until the dish is served — you can't taste, adjust, or even look inside while it's cooking.</p>
+          <table>
+            <tr><th>Analogy</th><th>What it maps to technically</th></tr>
+            <tr><td>"Write the recipe book"</td><td>Define the static computation graph using <code>tf.placeholder</code>, ops, <code>tf.Variable</code></td></tr>
+            <tr><td>"Sealed — chef in a back kitchen"</td><td>Graph runs inside the C++/CUDA engine; Python can't inspect values mid-run</td></tr>
+            <tr><td>"Can't taste while cooking"</td><td>No <code>print()</code> or <code>pdb</code> inside the graph — values are symbolic, not real yet</td></tr>
+            <tr><td>"Dish arrives at the table"</td><td><code>session.run(op, feed_dict={...})</code> — results only appear here</td></tr>
+          </table>
+        </div>
+
         <!-- Row A -->
         <div class="two-col">
           <div>
@@ -1213,6 +1237,18 @@ session.run(train_op, feed_dict={x: x_batch, y: y_batch})</code></pre>
       </div>
       <div class="era-body">
         <div class="era-tagline">"Make the common path simple: define layers → compile → fit."</div>
+
+        <div class="callout callout-mental">
+          <div class="callout-title">🧠 Mental model — ordering from a restaurant: fast, reliably good, but you can't modify the recipe</div>
+          <p><code>compile()</code> + <code>fit()</code> does everything — forward pass, loss, backward, weight update — all hidden. Perfect when what you want is on the menu. Impossible to customise when it isn't.</p>
+          <table>
+            <tr><th>Analogy</th><th>What it maps to technically</th></tr>
+            <tr><td>"Place your order"</td><td><code>model.compile(optimizer='adam', loss='...')</code></td></tr>
+            <tr><td>"Kitchen handles everything"</td><td><code>model.fit(X, y)</code> runs all of jobs 3–6 (forward / loss / backward / update) invisibly</td></tr>
+            <tr><td>"You can't find the kitchen"</td><td>Training logic is hidden — hard to inject custom steps or debug gradient flow</td></tr>
+            <tr><td>"Works great for standard menus"</td><td>Ideal for prototyping standard architectures; breaks down for research-level customisation</td></tr>
+          </table>
+        </div>
 
         <!-- Row A -->
         <div class="two-col">
@@ -1333,6 +1369,18 @@ model.fit(train_ds, epochs=3,
       <div class="era-body">
         <div class="era-tagline">"What you run is what you build — Pythonic control flow."</div>
 
+        <div class="callout callout-mental">
+          <div class="callout-title">🧠 Mental model — back in the kitchen yourself, cooking live, tasting as you go</div>
+          <p>Every line of Python executes immediately and produces a real value. Burned the sauce? You see it right now — not after the dinner is served. Autograd secretly tracks every ingredient you touch.</p>
+          <table>
+            <tr><th>Analogy</th><th>What it maps to technically</th></tr>
+            <tr><td>"Cooking live — every action immediate"</td><td>Eager execution: ops run the moment Python hits that line</td></tr>
+            <tr><td>"Taste as you go"</td><td><code>print(tensor)</code>, <code>pdb</code>, breakpoints work anywhere in the forward pass</td></tr>
+            <tr><td>"Tracking device on ingredients"</td><td><code>requires_grad=True</code> — tells autograd to record every operation on that tensor</td></tr>
+            <tr><td>"Retrace every step in reverse"</td><td><code>loss.backward()</code> — walks the dynamically recorded graph backwards to compute gradients</td></tr>
+          </table>
+        </div>
+
         <!-- Row A -->
         <div class="two-col">
           <div>
@@ -1433,6 +1481,19 @@ print("loss", float(loss))</code></pre>
       </div>
       <div class="era-body">
         <div class="era-tagline">"Autograd + explicit loops: great for learning and customization."</div>
+
+        <div class="callout callout-mental">
+          <div class="callout-title">🧠 Mental model — professional kitchen, fully equipped: you control every step, but the sous-chef handles all the tedious conversions automatically</div>
+          <p>All 7 jobs are visible Python lines you write yourself. But <code>nn.Module</code>, <code>DataLoader</code>, and <code>loss.backward()</code> mean you never hand-derive a gradient or manage GPU memory manually. You get the control of NumPy without the pain of NumPy.</p>
+          <table>
+            <tr><th>Analogy</th><th>What it maps to technically</th></tr>
+            <tr><td>"You write every step"</td><td>Explicit loop: <code>zero_grad → forward → loss → backward → step</code></td></tr>
+            <tr><td>"Fully stocked kitchen — great tools"</td><td><code>nn.Module</code>, <code>Adam</code>, <code>DataLoader</code>, <code>nn.Embedding</code>, <code>nn.Linear</code></td></tr>
+            <tr><td>"Sous-chef handles conversions"</td><td>Autograd computes all gradients automatically via <code>loss.backward()</code></td></tr>
+            <tr><td>"Same kitchen, any stove"</td><td><code>.to(device)</code> — identical code runs on CPU or GPU</td></tr>
+            <tr><td>"Nothing happens behind your back"</td><td>No hidden <code>fit()</code> — every line is readable, debuggable, customisable</td></tr>
+          </table>
+        </div>
 
         <!-- Row A -->
         <div class="two-col">
@@ -1552,6 +1613,19 @@ for x_b, y_b in loader:
       </div>
       <div class="era-body">
         <div class="era-tagline">"Keep eager ergonomics, add compiler optimizations for speed."</div>
+
+        <div class="callout callout-mental">
+          <div class="callout-title">🧠 Mental model — same professional kitchen, but overnight your sous-chef studies your recipes and pre-preps every predictable step</div>
+          <p>Your training loop is completely unchanged from Era 5. Dynamo studies your Python code overnight; Inductor generates faster GPU instructions. First batch is slower (prep time). Every batch after is faster — and you changed exactly one line.</p>
+          <table>
+            <tr><th>Analogy</th><th>What it maps to technically</th></tr>
+            <tr><td>"Sous-chef studies recipes overnight"</td><td>Dynamo traces your Python bytecode to understand how the model runs</td></tr>
+            <tr><td>"Pre-preps predictable steps"</td><td>Inductor / Triton compiles optimised GPU kernels for the hot ops</td></tr>
+            <tr><td>"You don't change how you cook"</td><td>Training loop is identical to Era 5 — no code rewrite required</td></tr>
+            <tr><td>"First morning is slow — still preparing"</td><td>First batch has compilation overhead; subsequent batches hit the fast path</td></tr>
+            <tr><td>"One-line hire"</td><td><code>model = torch.compile(model)</code> — the only change</td></tr>
+          </table>
+        </div>
 
         <!-- Row A -->
         <div class="two-col">

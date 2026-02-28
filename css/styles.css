@@ -231,6 +231,36 @@ p.section-subtitle {
   background: var(--green-light);
 }
 
+.callout.callout-mental {
+  border-color: #7c3aed;
+  background: #f5f3ff;
+  margin: 14px 0;
+}
+
+.callout.callout-mental .callout-title { color: #5b21b6; }
+
+.callout.callout-mental table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: .8rem;
+}
+
+.callout.callout-mental th {
+  text-align: left;
+  font-weight: 700;
+  color: var(--gray-600);
+  padding: 4px 8px;
+  border-bottom: 1px solid #ddd6fe;
+}
+
+.callout.callout-mental td {
+  padding: 4px 8px;
+  color: var(--gray-700);
+  border-bottom: 1px solid #ede9fe;
+  vertical-align: top;
+}
+
 .callout-title {
   font-weight: 700;
   font-size: .9rem;
