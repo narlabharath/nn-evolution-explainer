@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Generated plots are committed so GitHub Pages can serve them
+# Uncomment below only if you want to exclude them:
+# assets/plots/*.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp

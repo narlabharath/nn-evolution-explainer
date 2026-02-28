@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="NumPy logo">
+  <rect width="64" height="64" rx="10" fill="#4DABCF"/>
+  <text x="32" y="42" font-family="monospace" font-size="22" font-weight="bold" fill="#fff" text-anchor="middle">np</text>
+</svg>

@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How we build Neural Networks in Python: from NumPy to PyTorch</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Mermaid (diagrams) -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       TOP NAV
+  ═══════════════════════════════════════════════════════ -->
+  <nav class="top-nav" aria-label="Page sections">
+    <div class="nav-inner">
+      <a class="nav-brand" href="#hero">NN in Python</a>
+      <a href="#sec-nn-basics">NN Basics</a>
+      <a href="#sec-7jobs">7 Jobs</a>
+      <a href="#sec-loop">Training Loop</a>
+      <a href="#sec-why-python">Why Python</a>
+      <a href="#sec-timeline">Timeline</a>
+      <a href="#sec-eras">Era Cards</a>
+      <a href="#sec-compare">Keras vs PyTorch</a>
+      <a href="#sec-why-pytorch">Why PyTorch</a>
+      <a href="#sec-course">Course Note</a>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION A — HERO
+  ═══════════════════════════════════════════════════════ -->
+  <header id="hero" class="hero">
+    <div class="hero-inner">
+      <div class="chip-row" style="justify-content:center;margin-bottom:18px;">
+        <span class="chip chip-blue">IISc &times; TalentSprint · GenAI C2</span>
+      </div>
+      <h1>How we build <span>Neural Networks</span> in Python:<br/>from NumPy to PyTorch</h1>
+      <p class="hero-sub">
+        Frameworks change, mental models don't.<br/>
+        <strong>Keras today</strong> (for delivery continuity) &nbsp;·&nbsp;
+        <strong>PyTorch from next module</strong> (one consistent implementation style).
+      </p>
+      <div class="hero-chips">
+        <span class="hero-chip">🧠 Concepts are framework-agnostic</span>
+        <span class="hero-chip">⚡ Autograd removed manual gradients</span>
+        <span class="hero-chip">🔥 PyTorch = explicit, research-friendly, industry default</span>
+      </div>
+      <!-- framework logos -->
+      <div style="display:flex;gap:16px;justify-content:center;margin-top:32px;align-items:center;opacity:.75;">
+        <img src="assets/logos/numpy.svg"      width="40" height="40" alt="NumPy" title="NumPy" />
+        <span style="color:var(--gray-300);font-size:20px;">→</span>
+        <img src="assets/logos/tensorflow.svg" width="40" height="40" alt="TensorFlow" title="TensorFlow / Keras" />
+        <img src="assets/logos/keras.svg"      width="40" height="40" alt="Keras" title="Keras" />
+        <span style="color:var(--gray-300);font-size:20px;">→</span>
+        <img src="assets/logos/pytorch.svg"    width="40" height="40" alt="PyTorch" title="PyTorch" />
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION B — AGENDA
+  ═══════════════════════════════════════════════════════ -->
+  <section id="sec-agenda" class="section" data-nav-section>
+    <span class="you-are-here">What's covered</span>
+    <h2 class="section-title">Agenda</h2>
+    <p class="section-subtitle">Nine topics this page covers — jump to any section.</p>
+    <div class="agenda-list">
+      <div class="agenda-item">
+        <div class="agenda-icon">🧠</div>
+        <div><a href="#sec-nn-basics" style="color:inherit;text-decoration:none;">NN Basics</a><br/><span style="font-size:.8rem;color:var(--gray-400);font-weight:400;">What is a neural network?</span></div>
+      </div>
+      <div class="agenda-item">
+        <div class="agenda-icon">🔧</div>
+        <div><a href="#sec-7jobs" style="color:inherit;text-decoration:none;">7 Jobs of a Framework</a><br/><span style="font-size:.8rem;color:var(--gray-400);font-weight:400;">Tensors → forward → loss → grads → optimizer → data → eval</span></div>
+      </div>
+      <div class="agenda-item">
+        <div class="agenda-icon">🔄</div>
+        <div><a href="#sec-loop" style="color:inherit;text-decoration:none;">Training Loop</a><br/><span style="font-size:.8rem;color:var(--gray-400);font-weight:400;">Forward → loss → backward → update</span></div>
+      </div>
+      <div class="agenda-item">
+        <div class="agenda-icon">🐍</div>
+        <div><a href="#sec-why-python" style="color:inherit;text-decoration:none;">Why Python</a><br/><span style="font-size:.8rem;color:var(--gray-400);font-weight:400;">Control plane vs data plane</span></div>
+      </div>
+      <div class="agenda-item">
+        <div class="agenda-icon">📅</div>
+        <div><a href="#sec-timeline" style="color:inherit;text-decoration:none;">Evolution Timeline</a><br/><span style="font-size:.8rem;color:var(--gray-400);font-weight:400;">NumPy → Graph → Keras → PyTorch → Compile</span></div>
+      </div>
+      <div class="agenda-item">
+        <div class="agenda-icon">📖</div>
+        <div><a href="#sec-eras" style="color:inherit;text-decoration:none;">Era Deep-Dives</a><br/><span style="font-size:.8rem;color:var(--gray-400);font-weight:400;">6 eras with code, diagrams, and bottlenecks</span></div>
+      </div>
+      <div class="agenda-item">
+        <div class="agenda-icon">⚖️</div>
+        <div><a href="#sec-compare" style="color:inherit;text-decoration:none;">Keras vs PyTorch</a><br/><span style="font-size:.8rem;color:var(--gray-400);font-weight:400;">Concept mapping, decision matrix, scenarios</span></div>
+      </div>
+      <div class="agenda-item">
+        <div class="agenda-icon">🔥</div>
+        <div><a href="#sec-why-pytorch" style="color:inherit;text-decoration:none;">Why PyTorch Now</a><br/><span style="font-size:.8rem;color:var(--gray-400);font-weight:400;">Ecosystem default for GenAI</span></div>
+      </div>
+      <div class="agenda-item">
+        <div class="agenda-icon">🎓</div>
+        <div><a href="#sec-course" style="color:inherit;text-decoration:none;">Course Roadmap</a><br/><span style="font-size:.8rem;color:var(--gray-400);font-weight:400;">Keras today, PyTorch from next module</span></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-sep" />
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION C — NN BASICS
+  ═══════════════════════════════════════════════════════ -->
+  <section id="sec-nn-basics" class="section" data-nav-section>
+    <span class="you-are-here">Section C · NN Basics</span>
+    <h2 class="section-title">What is a Neural Network?</h2>
+    <p class="section-subtitle">A clean mental picture before we talk training or frameworks.</p>
+
+    <!-- C0 — One-sentence definition -->
+    <div class="banner">
+      A neural network is a <strong>parameterized function</strong> that maps inputs to outputs
+      using layers of simple computations — and <strong>learns by adjusting its parameters</strong>
+      to reduce a loss.
+    </div>
+
+    <!-- C1 — Three concept cards -->
+    <div class="card-grid card-grid-3" style="margin-top:28px;">
+
+      <div class="card">
+        <div class="card-title">🔵 Neuron (single unit)</div>
+        <div class="chip-row"><span class="chip chip-purple">y = σ(W·x + b)</span></div>
+        <ul>
+          <li><code class="inline">W·x + b</code> is a weighted score (linear combination of inputs)</li>
+          <li><code class="inline">σ</code> (activation) adds non-linearity — without it, deep stacks collapse to one layer</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🟢 Layer (many neurons at once)</div>
+        <div class="chip-row"><span class="chip chip-green">x:(batch, d_in) → y:(batch, d_out)</span></div>
+        <ul>
+          <li>A layer is a matrix multiply + bias applied to every example in the batch simultaneously</li>
+          <li>It produces multiple output features in one efficient operation</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🟠 Model (stacked layers)</div>
+        <div class="chip-row"><span class="chip chip-amber">Stack layers → learn richer functions</span></div>
+        <ul>
+          <li>Deeper stacks learn hierarchical representations (edges → shapes → objects)</li>
+          <li>Same building blocks (linear + activation) repeat throughout</li>
+        </ul>
+      </div>
+
+    </div><!-- /card-grid -->
+
+    <!-- C2 — Forward-pass diagram + C3 NumPy snippet -->
+    <div style="margin-top:36px;display:flex;flex-direction:column;gap:28px;">
+
+      <!-- Forward-pass diagram -->
+      <div>
+        <h3 style="font-size:.95rem;font-weight:700;margin-bottom:10px;">Forward pass — inputs → layers → output</h3>
+        <pre class="mermaid">
+flowchart LR
+  X["Input x\n(batch, d_in)"] --> L1["Dense: W·x + b"]
+  L1 --> A1["Activation σ(·)"]
+  A1 --> L2["Dense: W2·h + b2"]
+  L2 --> Y["Output\n(logits / prediction)"]
+        </pre>
+        <p style="font-size:.8rem;color:var(--gray-500);margin-top:8px;">
+          Each arrow is a layer; each layer is a matrix multiply + optional activation.
+        </p>
+      </div>
+
+      <!-- NumPy snippet -->
+      <div>
+        <h3 style="font-size:.95rem;font-weight:700;margin-bottom:10px;">Forward pass in NumPy (no training yet)</h3>
+        <div class="code-wrap">
+          <pre><code>import numpy as np
+
+def relu(z):
+    return np.maximum(0, z)
+
+# Batch of 4 examples, 3 input features each
+x = np.random.randn(4, 3)
+
+# Layer 1: (3 → 5)
+W1 = np.random.randn(3, 5) * 0.1
+b1 = np.zeros((1, 5))
+
+# Layer 2: (5 → 2)  — 2-class logits
+W2 = np.random.randn(5, 2) * 0.1
+b2 = np.zeros((1, 2))
+
+h      = relu(x @ W1 + b1)   # (4, 5)  hidden
+logits = h @ W2 + b2          # (4, 2)  scores
+print(logits.shape)           # (4, 2)</code></pre>
+        </div>
+        <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;margin-top:8px;">
+          <li>Core op: <strong>matrix multiply</strong> (<code class="inline">@</code>) + bias</li>
+          <li>ReLU adds <strong>non-linearity</strong> — stacking without it would be pointless</li>
+          <li><code class="inline">logits</code> are <strong>raw scores</strong>, not probabilities</li>
+        </ul>
+      </div>
+
+    </div><!-- /vertical stack -->
+
+    <!-- C4 — Vocabulary chips -->
+    <div class="chip-row" style="margin-top:28px;">
+      <span class="chip chip-blue">Tensor — multi-dimensional array</span>
+      <span class="chip chip-purple">Parameters — weights + biases</span>
+      <span class="chip chip-green">Activation — non-linearity</span>
+      <span class="chip chip-amber">Logits — raw scores (pre-softmax)</span>
+      <span class="chip">Forward pass — compute predictions</span>
+    </div>
+
+    <!-- C4b — Activation function quick-reference -->
+    <h3 style="font-size:1rem;font-weight:700;margin:28px 0 10px;">Activation functions — quick reference</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Activation</th><th>Formula</th><th>Output range</th><th>Best used for</th><th>Watch out for</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>ReLU</strong></td>
+            <td><code class="inline">max(0, z)</code></td>
+            <td>[0, ∞)</td>
+            <td>Hidden layers — fast, works well in practice</td>
+            <td>Dead neurons if z always &lt; 0 (use small LR / good init)</td>
+          </tr>
+          <tr>
+            <td><strong>Sigmoid</strong></td>
+            <td><code class="inline">1 / (1 + e⁻ᶻ)</code></td>
+            <td>(0, 1)</td>
+            <td>Binary classification final layer</td>
+            <td>Vanishing gradients in deep networks</td>
+          </tr>
+          <tr>
+            <td><strong>Tanh</strong></td>
+            <td><code class="inline">(eᶻ − e⁻ᶻ) / (eᶻ + e⁻ᶻ)</code></td>
+            <td>(−1, 1)</td>
+            <td>Hidden layers (zero-centered, often beats sigmoid)</td>
+            <td>Still saturates at extremes — vanishing gradients</td>
+          </tr>
+          <tr>
+            <td><strong>Softmax</strong></td>
+            <td><code class="inline">eᶻⁱ / Σ eᶻʲ</code></td>
+            <td>(0, 1) summing to 1</td>
+            <td>Multi-class final layer (probabilities)</td>
+            <td>Don't use inside hidden layers — use only at output</td>
+          </tr>
+          <tr>
+            <td><strong>None (linear)</strong></td>
+            <td><code class="inline">z</code></td>
+            <td>(−∞, ∞)</td>
+            <td>Regression output; logits before an external loss</td>
+            <td>Loss functions like CrossEntropyLoss expect raw logits, not softmax</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout" style="margin-top:6px;">
+      <strong>Rule of thumb:</strong> hidden layers → <code class="inline">ReLU</code> (default); output layer → no activation (logits), or <code class="inline">Sigmoid</code> (binary), or the loss handles <code class="inline">Softmax</code> internally.
+    </div>
+
+    <!-- C5 — Common confusion callout -->
+    <div class="callout callout-amber" style="margin-top:20px;">
+      <div class="callout-title">⚠️ Common confusion points</div>
+      <ul>
+        <li><strong>Shapes:</strong> ensure <code class="inline">(batch, d_in) @ (d_in, d_out) → (batch, d_out)</code> — dimension mismatch is the #1 error</li>
+        <li><strong>Logits vs probabilities:</strong> apply softmax/sigmoid <em>after</em> logits; loss functions often expect logits directly</li>
+        <li><strong>Activation placement:</strong> typically after linear transforms — the final layer's activation depends on the task</li>
+      </ul>
+    </div>
+
+    <!-- C6 — Bridge -->
+    <div class="transition-strip" style="margin-top:24px;border-radius:8px;">
+      <strong>Next →</strong> how do we make the parameters <em>learn</em>?
+      That's training: <strong>loss + gradients + updates</strong>.
+    </div>
+
+  </section>
+
+  <hr class="section-sep" />
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION D — 7 JOBS
+  ═══════════════════════════════════════════════════════ -->
+  <section id="sec-7jobs" class="section" data-nav-section>
+    <span class="you-are-here">Section D · Building a NN</span>
+    <h2 class="section-title">What it means to "build a NN in Python"</h2>
+    <p class="section-subtitle">Recognise these 7 jobs in any framework — they never go away.</p>
+
+    <!-- D0 — Framing banner -->
+    <div class="banner">
+      Building a NN in Python means implementing <strong>7 jobs</strong>:<br/>
+      tensors → forward → loss → gradients → optimizer → data pipeline → evaluation &amp; saving.
+    </div>
+
+    <!-- D1 — 7 job cards -->
+    <div class="card-grid card-grid-4" style="margin-top:24px;">
+
+      <div class="card">
+        <div class="card-title">1 · Tensors &amp; Devices</div>
+        <p style="font-size:.82rem;color:var(--gray-500);margin-bottom:8px;">The data type for numbers + where they live (CPU / GPU)</p>
+        <div class="chip-row">
+          <span class="chip">np.ndarray</span>
+          <span class="chip chip-blue">tf.Tensor</span>
+          <span class="chip chip-purple">torch.Tensor</span>
+        </div>
+        <ul><li><strong>Typical failure:</strong> device mismatch (CPU vs GPU) or wrong dtype</li></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">2 · Forward Pass</div>
+        <p style="font-size:.82rem;color:var(--gray-500);margin-bottom:8px;">Compute predictions from inputs</p>
+        <div class="chip-row">
+          <span class="chip chip-blue">model(x)</span>
+          <span class="chip chip-purple">forward()</span>
+        </div>
+        <ul><li><strong>Typical failure:</strong> shape mismatch on batch/sequence dims</li></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">3 · Loss Function</div>
+        <p style="font-size:.82rem;color:var(--gray-500);margin-bottom:8px;">Convert prediction error into a scalar to minimise</p>
+        <div class="chip-row">
+          <span class="chip chip-blue">SparseCatCE</span>
+          <span class="chip chip-purple">CrossEntropyLoss</span>
+        </div>
+        <ul><li><strong>Typical failure:</strong> passing probabilities when the loss expects logits</li></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">4 · Gradients</div>
+        <p style="font-size:.82rem;color:var(--gray-500);margin-bottom:8px;">Compute ∂loss/∂parameters</p>
+        <div class="chip-row">
+          <span class="chip chip-blue">fit() handles it</span>
+          <span class="chip chip-purple">loss.backward()</span>
+        </div>
+        <ul><li><strong>Typical failure:</strong> forgetting <code class="inline">zero_grad()</code> in PyTorch</li></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">5 · Optimizer</div>
+        <p style="font-size:.82rem;color:var(--gray-500);margin-bottom:8px;">Apply the update rule using gradients (SGD / Adam)</p>
+        <div class="chip-row">
+          <span class="chip chip-blue">optimizer="adam"</span>
+          <span class="chip chip-purple">optim.Adam()</span>
+        </div>
+        <ul><li><strong>Typical failure:</strong> learning rate too high/low</li></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">6 · Data Pipeline</div>
+        <p style="font-size:.82rem;color:var(--gray-500);margin-bottom:8px;">Batching, shuffling, tokenising, padding</p>
+        <div class="chip-row">
+          <span class="chip chip-blue">tf.data.Dataset</span>
+          <span class="chip chip-purple">DataLoader</span>
+        </div>
+        <ul>
+          <li><strong>Typical failure:</strong> inconsistent padding / label misalignment</li>
+          <li>Must shuffle training data each epoch to avoid ordering bias</li>
+          <li>Validation data should <em>not</em> be shuffled — deterministic evaluation</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">7 · Eval + Saving</div>
+        <p style="font-size:.82rem;color:var(--gray-500);margin-bottom:8px;">Metrics, checkpoints, load &amp; reuse</p>
+        <div class="chip-row">
+          <span class="chip chip-blue">model.save()</span>
+          <span class="chip chip-purple">state_dict</span>
+        </div>
+        <ul>
+          <li><strong>Typical failure:</strong> evaluating in train mode (dropout on)</li>
+          <li>PyTorch: always call <code class="inline">model.eval()</code> + <code class="inline">torch.no_grad()</code> during eval</li>
+          <li>Save <code class="inline">state_dict</code>, not the whole model object — more portable</li>
+        </ul>
+      </div>
+
+    </div><!-- /card-grid -->
+
+    <!-- D2 — Responsibility map diagram -->
+    <h3 style="font-size:1rem;font-weight:700;margin:36px 0 12px;">Who does what? — Keras hides, PyTorch shows</h3>
+    <div class="two-col">
+      <div>
+        <pre class="mermaid">
+flowchart LR
+  subgraph K["⚙️ Keras (high-level)"]
+    K1["Tensors + tf.data"] --> K2["Define model\n(layers)"]
+    K2 --> K3["compile()\nloss + optimizer + metrics"]
+    K3 --> K4["fit()\n✦ forward ✦ loss ✦ backward ✦ update"]
+    K4 --> K5["evaluate() / save()"]
+  end
+        </pre>
+      </div>
+      <div>
+        <pre class="mermaid">
+flowchart LR
+  subgraph P["🔥 PyTorch (explicit)"]
+    P1["Tensors + DataLoader"] --> P2["Define nn.Module"]
+    P2 --> P3["Training loop\nyou write\nforward→loss→backward→step"]
+    P3 --> P4["Eval loop\nyou write\nmodel.eval()"]
+    P4 --> P5["torch.save(state_dict)"]
+  end
+        </pre>
+      </div>
+    </div>
+
+    <div class="callout callout-green" style="margin-top:4px;">
+      <ul>
+        <li>Keras often <strong>hides</strong> steps 3–5 inside <code class="inline">fit()</code> — great for speed, but know what's happening.</li>
+        <li>PyTorch usually <strong>shows</strong> all steps explicitly — great for learning, debugging, and custom logic.</li>
+      </ul>
+    </div>
+
+    <!-- D3 — 4-line training step -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">The irreducible 4-step core (every framework does these)</h3>
+    <div class="two-col">
+      <div>
+        <p style="font-size:.85rem;color:var(--gray-500);margin-bottom:6px;">Framework-agnostic pseudo-steps:</p>
+        <div class="code-wrap">
+          <pre><code># 1) forward   — compute predictions
+# 2) loss      — measure error as a scalar
+# 3) backward  — compute gradients
+# 4) update    — optimizer adjusts weights</code></pre>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:.85rem;color:var(--gray-500);margin-bottom:6px;">PyTorch — written explicitly:</p>
+        <div class="code-wrap">
+          <pre><code>opt.zero_grad()          # reset previous gradients
+logits = model(x)        # 1) forward
+loss   = loss_fn(logits, y)  # 2) loss
+loss.backward()          # 3) backward
+opt.step()               # 4) update</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- D3b — Eval loop comparison -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">Job 7 in practice — eval loop Keras vs PyTorch</h3>
+    <div class="two-col">
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--red);margin-bottom:6px;">Keras — evaluate + save</p>
+        <div class="code-wrap">
+          <pre><code>loss, acc = model.evaluate(val_ds)
+print(f"val acc: {acc:.3f}")
+
+# Save full model
+model.save("model_weights.keras")
+
+# Reload
+model2 = tf.keras.models.load_model(
+    "model_weights.keras")</code></pre>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--blue);margin-bottom:6px;">PyTorch — eval loop + save</p>
+        <div class="code-wrap">
+          <pre><code>model.eval()                       # disable dropout
+correct = 0
+with torch.no_grad():              # no gradient tracking
+    for x_b, y_b in val_loader:
+        x_b, y_b = x_b.to(device), y_b.to(device)
+        preds = model(x_b).argmax(dim=1)
+        correct += (preds == y_b).sum().item()
+print(f"val acc: {correct/len(val_ds):.3f}")
+
+# Save / load weights
+torch.save(model.state_dict(), "ckpt.pt")
+model.load_state_dict(torch.load("ckpt.pt"))</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="callout callout-amber" style="margin-top:8px;">
+      <div class="callout-title">⚠️ Two easy PyTorch eval mistakes</div>
+      <ul>
+        <li>Forgetting <code class="inline">model.eval()</code> — Dropout stays on, BatchNorm uses running stats wrong → artificially high loss</li>
+        <li>Forgetting <code class="inline">torch.no_grad()</code> — wastes GPU memory building a gradient graph you never use</li>
+      </ul>
+    </div>
+
+    <!-- D4 — Bridge -->
+    <div class="transition-strip" style="margin-top:24px;border-radius:8px;">
+      <strong>Next →</strong> let's zoom into the training loop itself and make every arrow visually obvious.
+    </div>
+
+  </section>
+
+  <hr class="section-sep" />
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION E — TRAINING LOOP
+  ═══════════════════════════════════════════════════════ -->
+  <section id="sec-loop" class="section" data-nav-section>
+    <span class="you-are-here">Section E · Training Loop</span>
+    <h2 class="section-title">The Core Training Loop</h2>
+    <p class="section-subtitle">Make it visually unforgettable — then recognise it in Keras and PyTorch.</p>
+
+    <!-- E0 — Banner -->
+    <div class="banner">
+      Training is just: <strong>make a guess → measure error → compute gradients → update weights → repeat</strong>.
+    </div>
+
+    <!-- E1 — Big loop diagram + step note -->
+    <div class="two-col" style="margin-top:28px;align-items:start;">
+      <div>
+        <h3 style="font-size:.95rem;font-weight:700;margin-bottom:10px;">The loop — step by step</h3>
+        <pre class="mermaid">
+flowchart TB
+  A["0 · Batch of data\n(x, y)"] --> B["1 · Forward\nŷ = f(x ; θ)"]
+  B --> C["2 · Loss\nL(ŷ, y)  →  scalar"]
+  C --> D["3 · Backward\ncompute ∂L/∂θ"]
+  D --> E["4 · Update\nθ ← θ − η · g"]
+  E --> A
+        </pre>
+        <p style="font-size:.8rem;color:var(--gray-500);margin-top:6px;">
+          Frameworks mostly differ in <strong>where</strong> these steps appear in your code — not whether they exist.
+        </p>
+      </div>
+
+      <!-- E2 — 4 step mini-cards -->
+      <div>
+        <h3 style="font-size:.95rem;font-weight:700;margin-bottom:10px;">What happens at each step</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+
+          <div class="card" style="padding:14px 18px;">
+            <div class="card-title" style="color:var(--blue);">1 · Forward</div>
+            <p style="font-size:.82rem;color:var(--gray-700);">Model turns inputs into scores.<br/>
+              Keras: <code class="inline">logits = model(x)</code> &nbsp;·&nbsp;
+              PyTorch: same, inside <code class="inline">forward()</code></p>
+            <p style="font-size:.78rem;color:var(--gray-400);margin-top:4px;">Shape: (batch, features) → (batch, classes)</p>
+          </div>
+
+          <div class="card" style="padding:14px 18px;">
+            <div class="card-title" style="color:var(--purple);">2 · Loss</div>
+            <p style="font-size:.82rem;color:var(--gray-700);">Compress error into one number.<br/>
+              Keras: declared in <code class="inline">compile()</code> &nbsp;·&nbsp;
+              PyTorch: <code class="inline">loss = loss_fn(logits, y)</code></p>
+            <p style="font-size:.78rem;color:var(--gray-400);margin-top:4px;">Output: a single <strong>scalar</strong></p>
+          </div>
+
+          <div class="card" style="padding:14px 18px;">
+            <div class="card-title" style="color:var(--green);">3 · Backward (gradients)</div>
+            <p style="font-size:.82rem;color:var(--gray-700);">"How to change each weight to reduce loss?"<br/>
+              Keras: inside <code class="inline">fit()</code> &nbsp;·&nbsp;
+              PyTorch: <code class="inline">loss.backward()</code></p>
+            <p style="font-size:.78rem;color:var(--gray-400);margin-top:4px;">Each parameter gets a <code class="inline">.grad</code> tensor</p>
+          </div>
+
+          <div class="card" style="padding:14px 18px;">
+            <div class="card-title" style="color:var(--amber);">4 · Update</div>
+            <p style="font-size:.82rem;color:var(--gray-700);">Optimizer applies the update rule (SGD / Adam).<br/>
+              Keras: <code class="inline">optimizer="adam"</code> &nbsp;·&nbsp;
+              PyTorch: <code class="inline">opt.step()</code></p>
+            <p style="font-size:.78rem;color:var(--gray-400);margin-top:4px;">Parameters change slightly each step</p>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /two-col E1+E2 -->
+
+    <!-- E3 — Numeric loss example -->
+    <h3 style="font-size:1rem;font-weight:700;margin:36px 0 12px;">Tiny numeric example — logits → probabilities → loss</h3>
+    <div class="two-col">
+      <div class="code-wrap">
+        <pre><code>import math
+
+logits = [2.0, 1.0]           # raw scores for 2 classes
+
+# softmax
+e0 = math.exp(logits[0])      # e^2.0 ≈ 7.39
+e1 = math.exp(logits[1])      # e^1.0 ≈ 2.72
+p0 = e0 / (e0 + e1)           # ≈ 0.73
+p1 = e1 / (e0 + e1)           # ≈ 0.27
+
+y_true = 0                    # true class is 0
+loss = -math.log(p0)          # cross-entropy ≈ 0.31
+print(f"probs: {p0:.2f}, {p1:.2f}  loss: {loss:.3f}")</code></pre>
+      </div>
+      <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+        <li><strong>Logits</strong> are unnormalized scores — any real number</li>
+        <li><strong>Softmax</strong> converts them to probabilities that sum to 1</li>
+        <li><strong>Cross-entropy</strong> punishes confident wrong predictions more harshly</li>
+        <li>If true class = 0 and p₀ = 0.99, loss ≈ 0.01 (low). If p₀ = 0.01, loss ≈ 4.6 (high)</li>
+      </ul>
+    </div>
+
+    <!-- E4 — Backprop micro-diagram -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">Why gradients matter — backprop in one picture</h3>
+    <pre class="mermaid">
+flowchart RL
+  L["Loss L"] --> G1["∂L/∂logits"]
+  G1 --> G2["∂L/∂W2, ∂L/∂b2"]
+  G2 --> G3["∂L/∂W1, ∂L/∂b1"]
+  G3 --> U["Optimizer updates\n(W, b)"]
+    </pre>
+    <div class="callout" style="margin-top:8px;">
+      Backprop is just <strong>chain rule applied efficiently</strong> — so you never compute gradients by hand.
+      That's exactly what <em>autograd</em> automates.
+    </div>
+
+    <!-- E5 — Keras vs PyTorch side-by-side -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">Same loop — Keras hides it, PyTorch shows it</h3>
+    <div class="two-col">
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--red);margin-bottom:6px;">Keras (high-level)</p>
+        <div class="code-wrap">
+          <pre><code>model.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy"
+)
+model.fit(train_ds, epochs=3)
+# fit() runs: forward→loss→backward→update
+# for every batch, every epoch — automatically</code></pre>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--blue);margin-bottom:6px;">PyTorch (explicit)</p>
+        <div class="code-wrap">
+          <pre><code>for x, y in loader:
+    opt.zero_grad()       # reset grads
+    logits = model(x)     # 1) forward
+    loss = loss_fn(logits, y)  # 2) loss
+    loss.backward()       # 3) backward
+    opt.step()            # 4) update</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="chip-row" style="margin-top:8px;">
+      <span class="chip chip-blue">Concepts transfer. Syntax changes.</span>
+      <span class="chip chip-purple">Keras hides the loop; PyTorch shows it.</span>
+    </div>
+
+    <!-- E6 — Loss curve plot -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 10px;">What training looks like — loss over time</h3>
+    <div class="plot-wrap">
+      <img src="assets/plots/loss_curve.png" alt="Illustrative loss curve showing training and validation loss decreasing over steps" />
+      <div class="plot-caption">Illustrative / conceptual — not real measurements. Generate via: <code>python scripts/make_plots.py</code></div>
+    </div>
+
+    <!-- E7 — Pitfalls callout -->
+    <div class="callout callout-amber" style="margin-top:8px;">
+      <div class="callout-title">⚠️ Common pitfalls in training</div>
+      <ul>
+        <li>Using the wrong loss — passing probabilities when the loss expects logits (or vice versa)</li>
+        <li>Forgetting <code class="inline">model.eval()</code> during evaluation in PyTorch (dropout / BatchNorm stay in train mode)</li>
+        <li>Not zeroing gradients in PyTorch: <code class="inline">opt.zero_grad()</code> must come first each step</li>
+        <li>Learning rate too high: loss explodes. Too low: training stalls with no learning</li>
+      </ul>
+    </div>
+
+    <!-- E8 — Bridge -->
+    <div class="transition-strip" style="margin-top:24px;border-radius:8px;">
+      <strong>Next →</strong> the loop is clear — but <em>why did Python become the default language</em>
+      to express it, while C/CUDA does the heavy lifting?
+    </div>
+
+  </section>
+
+  <hr class="section-sep" />
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION F — WHY PYTHON
+  ═══════════════════════════════════════════════════════ -->
+  <section id="sec-why-python" class="section" data-nav-section>
+    <span class="you-are-here">Section F · Why Python</span>
+    <h2 class="section-title">Why Python Won (and why frameworks exist)</h2>
+    <p class="section-subtitle">Python is the control plane. The heavy math runs elsewhere.</p>
+
+    <!-- F0 — Banner -->
+    <div class="banner">
+      Python is the <strong>control plane</strong> (readable, fast iteration).
+      The <strong>data plane</strong> (tensor math) runs in optimized C/C++/CUDA.
+    </div>
+
+    <!-- F1 — 4 reason cards -->
+    <div class="card-grid card-grid-4" style="margin-top:24px;">
+
+      <div class="card">
+        <div class="card-title">⚡ Fast Experimentation</div>
+        <ul>
+          <li>Quick iteration and readable code</li>
+          <li>Great debugging + interactive notebooks</li>
+          <li>Easy to prototype research ideas</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔬 Scientific Ecosystem</div>
+        <ul>
+          <li>NumPy / SciPy, plotting, notebooks</li>
+          <li>Tokenization, preprocessing, evaluation tools</li>
+          <li>Most ML utilities ship Python-first</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔗 "Glue Language" Superpower</div>
+        <ul>
+          <li>Connects data loading → training → eval → deploy</li>
+          <li>Calls into fast native libs (BLAS, cuDNN) when needed</li>
+          <li>One language for the full pipeline</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🌍 Community + Education</div>
+        <ul>
+          <li>Largest beginner-friendly ecosystem</li>
+          <li>Most tutorials, papers, and model releases use Python</li>
+          <li>Hugging Face, LangChain, etc. are Python-native</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- F2 — Two-layer mental model diagram -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">The two-layer mental model</h3>
+    <pre class="mermaid">
+flowchart TB
+  subgraph Control["🐍 Python — control plane"]
+    A["Data pipeline\n(tokenize / batch)"] --> B["Define model\n(layers / forward)"]
+    B --> C["Training loop\n(or fit())"]
+    C --> D["Eval + save"]
+  end
+  subgraph DataPlane["⚙️ Native runtime — data plane"]
+    E["C/C++ kernels\n(BLAS, cuDNN)"] --> F["GPU / TPU execution\n(CUDA / XLA)"]
+  end
+  B -. calls .-> E
+  C -. calls .-> E
+    </pre>
+    <p style="font-size:.8rem;color:var(--gray-500);margin-top:8px;">
+      Your Python code <em>orchestrates</em> operations; optimized kernels do the heavy lifting.
+    </p>
+
+    <!-- F3 — Vectorization demo -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">Why vectorization matters — Python loop vs array op</h3>
+    <div class="two-col">
+      <div class="code-wrap">
+        <pre><code>import numpy as np, time
+
+n = 200_000
+x = np.random.randn(n)
+y = np.random.randn(n)
+
+# Slow: Python loop
+t0 = time.time()
+s = 0.0
+for i in range(n):
+    s += x[i] * y[i]
+print("loop  :", round(time.time()-t0, 4), "s")
+
+# Fast: vectorized (native C under the hood)
+t0 = time.time()
+s = np.dot(x, y)          # &lt;-- same result, much faster
+print("np.dot:", round(time.time()-t0, 6), "s")</code></pre>
+      </div>
+      <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+        <li>Python loops are slow for large numeric workloads — each iteration has interpreter overhead</li>
+        <li>Vectorized ops delegate to optimized native libraries (BLAS, etc.)</li>
+        <li>Modern DL frameworks extend this idea to GPUs — entire batches processed in parallel</li>
+        <li>Speed difference: often <strong>100–1000×</strong> on large arrays</li>
+      </ul>
+    </div>
+
+    <!-- F4 — DL needs more than NumPy -->
+    <div class="callout" style="margin-top:16px;">
+      <div class="callout-title">🔧 Deep learning adds two hard requirements NumPy can't satisfy alone</div>
+      <ul>
+        <li><strong>Automatic differentiation (autograd):</strong> gradients without manual math — impossible in plain NumPy</li>
+        <li><strong>Accelerator execution:</strong> run tensor ops efficiently on GPU/TPU — NumPy is CPU-only</li>
+      </ul>
+    </div>
+
+    <!-- F5 — Device one-liner -->
+    <h3 style="font-size:1rem;font-weight:700;margin:28px 0 10px;">Devices are a first-class concept in DL tooling</h3>
+    <div class="code-wrap" style="max-width:480px;">
+      <pre><code>import torch
+x = torch.randn(32, 128)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+x = x.to(device)
+print(x.device)  # e.g. cuda:0  or  cpu</code></pre>
+    </div>
+
+    <!-- F6 — Bottleneck + bridge -->
+    <div class="callout callout-amber" style="margin-top:20px;">
+      <div class="callout-title">⚠️ The bottleneck that forced the framework era</div>
+      <ul>
+        <li>NumPy made tensor math easy — but <strong>manual gradients don't scale</strong></li>
+        <li>Python is great for orchestration — but <strong>GPUs + custom kernels require native layers</strong></li>
+        <li>Production needed reusable components (layers, optimizers, data pipelines) → frameworks standardized the workflow</li>
+      </ul>
+    </div>
+
+    <div class="transition-strip" style="margin-top:20px;border-radius:8px;">
+      <strong>Next →</strong> the full timeline — how tools evolved, and exactly which bottleneck each era removed.
+    </div>
+
+  </section>
+
+  <hr class="section-sep" />
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION G — TIMELINE
+  ═══════════════════════════════════════════════════════ -->
+  <section id="sec-timeline" class="section" data-nav-section>
+    <span class="you-are-here">Section G · Evolution Timeline</span>
+    <h2 class="section-title">How the Tooling Evolved</h2>
+    <p class="section-subtitle">Each era removed one bottleneck. Click any era to jump to its deep-dive card.</p>
+
+    <div class="timeline" style="margin-top:28px;">
+
+      <div class="timeline-item era-numpy">
+        <div class="timeline-label">Early – present</div>
+        <div class="timeline-title">NumPy / Manual backprop</div>
+        <div class="timeline-tagline">Fast tensor math — but gradients are on you.</div>
+        <a class="timeline-link" href="#era-numpy">Deep-dive card →</a>
+      </div>
+
+      <div class="timeline-item era-graph">
+        <div class="timeline-label">≈ 2010 – 2018</div>
+        <div class="timeline-title">Graph-first / Symbolic (Theano, TF 1.x)</div>
+        <div class="timeline-tagline">Define a computation graph, then run it. Autograd arrives.</div>
+        <a class="timeline-link" href="#era-graph">Deep-dive card →</a>
+      </div>
+
+      <div class="timeline-item era-keras">
+        <div class="timeline-label">≈ 2015 – present</div>
+        <div class="timeline-title">Keras / High-level API</div>
+        <div class="timeline-tagline">Define layers → compile → fit. Training in 3 lines.</div>
+        <a class="timeline-link" href="#era-keras">Deep-dive card →</a>
+      </div>
+
+      <div class="timeline-item era-eager">
+        <div class="timeline-label">≈ 2015 – present</div>
+        <div class="timeline-title">Eager / Define-by-run (Chainer, TF2 eager)</div>
+        <div class="timeline-tagline">Pythonic control flow — what you run is what you build.</div>
+        <a class="timeline-link" href="#era-eager">Deep-dive card →</a>
+      </div>
+
+      <div class="timeline-item era-pytorch">
+        <div class="timeline-label">≈ 2016 – present</div>
+        <div class="timeline-title">PyTorch Mainstream</div>
+        <div class="timeline-tagline">Explicit training loop + strong autograd ergonomics. Research default.</div>
+        <a class="timeline-link" href="#era-pytorch">Deep-dive card →</a>
+      </div>
+
+      <div class="timeline-item era-compile">
+        <div class="timeline-label">≈ 2020 – present</div>
+        <div class="timeline-title">Compilation Era (torch.compile, XLA)</div>
+        <div class="timeline-tagline">Keep eager UX, add compiler optimizations for speed.</div>
+        <a class="timeline-link" href="#era-compile">Deep-dive card →</a>
+      </div>
+
+    </div><!-- /timeline -->
+
+    <!-- Era breakthrough summary table -->
+    <div class="table-wrap" style="margin-top:24px;">
+      <table>
+        <thead>
+          <tr><th>Era</th><th>Key tool(s)</th><th>Bottleneck removed</th><th>Bottleneck introduced</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1 · NumPy</td>
+            <td><code class="inline">np.ndarray</code>, <code class="inline">@</code></td>
+            <td>Slow nested loops for tensor math</td>
+            <td>Manual gradient derivation for every layer</td>
+          </tr>
+          <tr>
+            <td>2 · Graph-first</td>
+            <td>Theano, TF 1.x, <code class="inline">session.run()</code></td>
+            <td>Manual gradients — autograd arrives</td>
+            <td>Define-before-run: indirect debugging, no Python control flow</td>
+          </tr>
+          <tr>
+            <td>3 · Keras</td>
+            <td><code class="inline">compile()</code>, <code class="inline">fit()</code></td>
+            <td>Boilerplate training loops rewritten every project</td>
+            <td>Training loop hidden — hard to customize deeply</td>
+          </tr>
+          <tr>
+            <td>4 · Eager</td>
+            <td>Chainer, TF2, <code class="inline">GradientTape</code></td>
+            <td>Indirect debugging; no natural Python control flow</td>
+            <td>Historically slower than compiled graphs at scale</td>
+          </tr>
+          <tr>
+            <td>5 · PyTorch</td>
+            <td><code class="inline">nn.Module</code>, <code class="inline">DataLoader</code></td>
+            <td>Hidden loops; hard to insert custom logic</td>
+            <td>Eager execution can underperform for LLM-scale training</td>
+          </tr>
+          <tr>
+            <td>6 · Compile</td>
+            <td><code class="inline">torch.compile</code>, XLA, JAX</td>
+            <td>Eager perf gap — get speed without giving up debuggability</td>
+            <td>Still maturing: dynamic shapes, edge cases in tracing</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Graph-first vs Eager mental model diagram -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">Two execution mental models</h3>
+    <div class="two-col">
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--amber);margin-bottom:6px;">Graph-first / Symbolic</p>
+        <pre class="mermaid">
+flowchart LR
+  A["Define graph"] --> B["Optimize /\nCompile"] --> C["Run"]
+        </pre>
+      </div>
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--blue);margin-bottom:6px;">Eager / Define-by-run</p>
+        <pre class="mermaid">
+flowchart LR
+  B1["Run forward\nin Python"] --> B2["Graph recorded\ndynamically"] --> B3["Backward"]
+        </pre>
+      </div>
+    </div>
+
+    <div class="transition-strip" style="margin-top:20px;border-radius:8px;">
+      <strong>Next →</strong> deep-dive era cards — same format every time so you can compare them quickly.
+    </div>
+
+  </section>
+
+  <hr class="section-sep" />
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION H — ERA CARDS
+  ═══════════════════════════════════════════════════════ -->
+  <section id="sec-eras" class="section" data-nav-section>
+    <span class="you-are-here">Section H · Era Cards</span>
+    <h2 class="section-title">Era-by-Era Deep Dives</h2>
+    <p class="section-subtitle">Every era: superpower added → tiny example → bottleneck that motivated the next era.</p>
+
+    <!-- Shared mini-problem legend -->
+    <div class="callout callout-green" style="margin-bottom:32px;">
+      <div class="callout-title">📌 Shared mini-problem (used in every era)</div>
+      <p style="margin-bottom:8px;">Every snippet solves the same toy task: <strong>text classification</strong>.</p>
+      <div class="shape-legend">
+        <span class="shape-item">x : (B, T)  — token IDs</span>
+        <span class="shape-item">E : (V, D)  — embedding table</span>
+        <span class="shape-item">h : (B, D)  — mean-pooled vector</span>
+        <span class="shape-item">logits : (B, C)  — class scores</span>
+      </div>
+    </div>
+
+    <!-- ─── Era 1: NumPy / Manual gradients ─── -->
+    <div id="era-numpy" class="era-card">
+      <div class="era-header">
+        <span class="era-badge numpy-badge">Era 1</span>
+        <div class="era-title">NumPy / Manual Backprop</div>
+        <div class="era-years">Early – present</div>
+      </div>
+      <div class="era-body">
+        <div class="era-tagline">"Fast tensor math, but training is manual."</div>
+
+        <!-- Row A: context + superpower -->
+        <div class="two-col">
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--gray-500);margin-bottom:6px;">WHAT WAS PAINFUL BEFORE</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li>You can do tensor math, but must <strong>derive and implement gradients yourself</strong></li>
+              <li>Every new layer = new derivative code (easy to get wrong)</li>
+            </ul>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--green);margin-bottom:6px;">✨ SUPERPOWER ADDED</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li>Vectorized tensor ops make the <strong>forward pass fast</strong> on CPU</li>
+              <li>NN computations expressible as readable NumPy code</li>
+            </ul>
+          </div>
+        </div>
+        <div class="chip-row" style="margin-top:12px;">
+          <span class="chip">np.ndarray</span>
+          <span class="chip">matrix multiply (@)</span>
+          <span class="chip">logits</span>
+          <span class="chip">softmax</span>
+          <span class="chip">cross-entropy</span>
+          <span class="chip chip-amber">manual gradients</span>
+        </div>
+
+        <!-- Row B: diagram + snippet -->
+        <div class="era-row-b" style="margin-top:20px;">
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Flow — forward then hand-derived backward</p>
+            <pre class="mermaid">
+flowchart TB
+  X["Token IDs x\n(B,T)"] --> E["Embedding lookup\nE[x] → (B,T,D)"]
+  E --> H["Mean pooling\n(B,D)"]
+  H --> Z["Linear: h@W+b\nlogits (B,C)"]
+  Z --> S["Softmax\nprobs (B,C)"]
+  S --> L["Cross-entropy\nscalar"]
+  L -."manual math".-> G1["dlogits = probs − one_hot(y)"]
+  G1 -.-> G2["dW = hᵀ · dlogits"]
+  G1 -.-> G3["db = sum(dlogits)"]
+  G2 -.-> U["Update\nW -= lr·dW"]
+            </pre>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Code — manual forward + backward</p>
+            <div class="code-wrap">
+              <pre><code>import numpy as np
+
+B, T, V, D, C = 4, 6, 50, 8, 2
+x = np.random.randint(0, V, (B, T))
+y = np.random.randint(0, C, (B,))
+
+E = np.random.randn(V, D) * 0.1  # embedding table
+W = np.random.randn(D, C) * 0.1
+b = np.zeros((1, C))
+
+# --- forward ---
+h = E[x].mean(axis=1)           # (B,D)
+logits = h @ W + b              # (B,C)
+exp = np.exp(logits - logits.max(1, keepdims=True))
+probs = exp / exp.sum(1, keepdims=True)
+loss = -np.log(probs[np.arange(B), y]).mean()
+
+# --- backward (manual chain rule) ---
+dlogits = probs.copy()
+dlogits[np.arange(B), y] -= 1
+dlogits /= B
+dW = h.T @ dlogits
+db = dlogits.sum(axis=0, keepdims=True)
+
+# --- update ---
+W -= 0.5 * dW
+b -= 0.5 * db
+print("loss:", round(float(loss), 4))</code></pre>
+            </div>
+            <ul style="font-size:.82rem;color:var(--gray-700);padding-left:18px;margin-top:8px;">
+              <li>Forward is clean; <strong>backward is hand-derived</strong> for every op</li>
+              <li>Shapes must be tracked carefully at every step</li>
+              <li>Embeddings kept fixed here; training them manually adds more bookkeeping</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Row C: what got easier + bottleneck -->
+        <div class="era-row-c">
+          <div class="card" style="border-color:var(--green-light);background:var(--green-light);">
+            <div class="card-title" style="color:var(--green);">✅ What got easier</div>
+            <ul>
+              <li>NNs are now implementable as <strong>vectorized code</strong> (feasible on CPU)</li>
+              <li>Larger batches without nested Python loops</li>
+              <li>Forward computation is readable and composable</li>
+            </ul>
+          </div>
+          <div class="callout callout-red" style="margin:0;">
+            <div class="callout-title">🛑 Bottleneck: manual gradients don't scale</div>
+            <ul>
+              <li>Every new layer/activation needs new derivative code</li>
+              <li>Deeper models multiply bookkeeping burden (chain rule everywhere)</li>
+              <li>GPUs, CNNs, RNNs, Attention — all painful without a framework</li>
+            </ul>
+            <p style="font-size:.82rem;margin-top:8px;font-weight:600;">So the next era… introduced <strong>automatic differentiation (autograd)</strong>.</p>
+          </div>
+        </div>
+      </div>
+      <div class="era-invariants">
+        ✅ Tensor shapes &nbsp;·&nbsp; ✅ Forward → loss → backward → update &nbsp;·&nbsp; ✅ Embeddings = lookup table
+        &nbsp;&nbsp;&nbsp;
+        <span style="color:var(--gray-500);">Keras token ↔ PyTorch token: <code class="inline">np.ndarray</code> ↔ <code class="inline">torch.Tensor</code></span>
+      </div>
+    </div><!-- /era-numpy -->
+
+    <!-- ─── Era 2: Graph-first / Symbolic ─── -->
+    <div id="era-graph" class="era-card">
+      <div class="era-header">
+        <span class="era-badge graph-badge">Era 2</span>
+        <div class="era-title">Graph-first / Symbolic (Theano, TF 1.x style)</div>
+        <div class="era-years">≈ 2010 – 2018</div>
+      </div>
+      <div class="era-body">
+        <div class="era-tagline">"Define a computation graph, then run it — autograd arrives."</div>
+
+        <!-- Row A -->
+        <div class="two-col">
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--gray-500);margin-bottom:6px;">WHAT WAS PAINFUL BEFORE</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li>Manual gradients for every operation — error-prone at scale</li>
+              <li>No standardized way to target GPUs or optimize computation</li>
+            </ul>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--amber);margin-bottom:6px;">✨ SUPERPOWER ADDED</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li><strong>Automatic differentiation:</strong> gradients computed from the graph</li>
+              <li>Graph can be <strong>compiled and optimized</strong> before running</li>
+            </ul>
+          </div>
+        </div>
+        <div class="chip-row" style="margin-top:12px;">
+          <span class="chip">symbolic tensor</span>
+          <span class="chip">placeholder</span>
+          <span class="chip chip-amber">compute graph</span>
+          <span class="chip">autograd</span>
+          <span class="chip">session / run</span>
+          <span class="chip">static graph</span>
+        </div>
+
+        <!-- Row B -->
+        <div class="era-row-b" style="margin-top:20px;">
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Flow — define graph first, run later</p>
+            <pre class="mermaid">
+flowchart TB
+  A["Define graph\n(placeholders + ops)"] --> B["Auto-diff builds\ngradient ops on graph"]
+  B --> C["Optimize / Compile\ngraph (optional)"]
+  C --> D["Session.run( )\nfeed real data → get output"]
+            </pre>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Pseudocode — graph-first style</p>
+            <div class="code-wrap">
+              <pre><code># Graph construction phase (no data yet)
+x = placeholder(shape=(None, T))   # symbolic input
+E_var = variable(shape=(V, D))     # trainable embedding table
+h = mean(E_var[x], axis=1)        # (B, D) — symbolic op
+logits = matmul(h, W) + b          # (B, C) — symbolic op
+loss = cross_entropy(logits, y)    # scalar — symbolic op
+
+# Gradient ops built automatically on the graph
+grads = grad(loss, [W, b, E_var])  # auto-diff
+
+# Execution phase — feed real data
+session.run(train_op, feed_dict={x: x_batch, y: y_batch})</code></pre>
+            </div>
+            <ul style="font-size:.82rem;color:var(--gray-700);padding-left:18px;margin-top:8px;">
+              <li>Construction and execution are <strong>two separate phases</strong></li>
+              <li>Gradients are derived <strong>automatically</strong> from the graph</li>
+              <li>The graph can be serialized and deployed — good for production</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Row C -->
+        <div class="era-row-c">
+          <div class="card" style="border-color:var(--green-light);background:var(--green-light);">
+            <div class="card-title" style="color:var(--green);">✅ What got easier</div>
+            <ul>
+              <li>Gradients computed <strong>automatically</strong> — no manual math</li>
+              <li>Graph can be optimized for GPU / TPU</li>
+              <li>Reproducible and serializable computational graphs</li>
+            </ul>
+          </div>
+          <div class="callout callout-red" style="margin:0;">
+            <div class="callout-title">🛑 Bottleneck: debugging is indirect</div>
+            <ul>
+              <li>Define-now, run-later → errors surface only at execution time</li>
+              <li>Regular Python control flow (if/for) can't be used naturally</li>
+              <li>Steep mental overhead for beginners; hard to inspect intermediate values</li>
+            </ul>
+            <p style="font-size:.82rem;margin-top:8px;font-weight:600;">So the next era… brought <strong>eager / dynamic execution</strong> and high-level APIs like Keras.</p>
+          </div>
+        </div>
+      </div>
+      <div class="era-invariants">
+        ✅ Tensor shapes &nbsp;·&nbsp; ✅ Forward → loss → backward → update &nbsp;·&nbsp; ✅ Embeddings = lookup table
+        &nbsp;&nbsp;&nbsp;
+        <span style="color:var(--gray-500);">Concept transfer: <code class="inline">grad(loss, params)</code> ↔ <code class="inline">loss.backward()</code></span>
+      </div>
+    </div><!-- /era-graph -->
+
+    <!-- ─── Era 3: Keras / High-level API ─── -->
+    <div id="era-keras" class="era-card">
+      <div class="era-header">
+        <span class="era-badge keras-badge">Era 3</span>
+        <div class="era-title">Keras / High-level API</div>
+        <div class="era-years">≈ 2015 – present</div>
+      </div>
+      <div class="era-body">
+        <div class="era-tagline">"Make the common path simple: define layers → compile → fit."</div>
+
+        <!-- Row A -->
+        <div class="two-col">
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--gray-500);margin-bottom:6px;">WHAT WAS PAINFUL BEFORE</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li>Training code was <strong>repetitive boilerplate</strong> — rewriting the same loop every project</li>
+              <li>Beginners struggled to assemble a <em>complete</em> workflow (metrics, batching, validation, saving)</li>
+            </ul>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--red);margin-bottom:6px;">✨ SUPERPOWER ADDED</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li>Clean, <strong>batteries-included API</strong>: layers → compile → fit</li>
+              <li>Metrics, callbacks, early stopping, validation — all included</li>
+            </ul>
+          </div>
+        </div>
+        <div class="chip-row" style="margin-top:12px;">
+          <span class="chip">Sequential / Model</span>
+          <span class="chip chip-blue">Embedding</span>
+          <span class="chip chip-blue">GlobalAveragePooling1D</span>
+          <span class="chip">compile()</span>
+          <span class="chip chip-red">fit()</span>
+          <span class="chip">from_logits=True</span>
+          <span class="chip">callbacks</span>
+        </div>
+
+        <!-- Row B -->
+        <div class="era-row-b" style="margin-top:20px;">
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Flow — preprocessing + Keras training abstraction</p>
+            <pre class="mermaid">
+flowchart TB
+  subgraph Prep["Text preprocessing"]
+    R["Raw text"] --> T["Tokenize"]
+    T --> I["Integerize\n(token IDs)"]
+    I --> P["Pad / Batch\n(B, T)"]
+  end
+  subgraph Train["Keras high-level training"]
+    P --> M["Model\nEmbedding→Pool→Dense"]
+    M --> C["compile()\nloss + opt + metrics"]
+    C --> F["fit()\nruns training loop"]
+    F --> Ev["evaluate() / save()"]
+  end
+            </pre>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Code — text classifier in Keras</p>
+            <div class="code-wrap">
+              <pre><code>import tensorflow as tf
+from tensorflow.keras import layers
+
+V, D, C = 20_000, 128, 2
+
+model = tf.keras.Sequential([
+    layers.Input(shape=(None,), dtype="int32"),
+    layers.Embedding(V, D),            # (B,T,D)
+    layers.GlobalAveragePooling1D(),   # (B,D) mean-pool
+    layers.Dense(64, activation="relu"),
+    layers.Dense(C)                    # logits (B,C)
+])
+
+loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(
+    from_logits=True)
+model.compile(
+    optimizer="adam",
+    loss=loss_fn,
+    metrics=["accuracy"])
+
+model.fit(train_ds, epochs=3,
+          validation_data=val_ds)</code></pre>
+            </div>
+            <ul style="font-size:.82rem;color:var(--gray-700);padding-left:18px;margin-top:8px;">
+              <li>Last Dense outputs <strong>logits</strong> (no softmax) — <code class="inline">from_logits=True</code> handles it</li>
+              <li><code class="inline">fit()</code> runs forward → loss → backward → update for every batch</li>
+              <li>Layers express the model clearly: <code class="inline">Embedding → Pool → Dense</code></li>
+              <li>Metrics + validation + progress bars with zero extra code</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Row C -->
+        <div class="era-row-c">
+          <div class="card" style="border-color:var(--green-light);background:var(--green-light);">
+            <div class="card-title" style="color:var(--green);">✅ What got easier</div>
+            <ul>
+              <li>Build standard models quickly with a <strong>readable, consistent API</strong></li>
+              <li>Training workflow is "batteries included": metrics, callbacks, checkpoints</li>
+              <li>Onboarding is faster — learners see the whole pipeline immediately</li>
+            </ul>
+          </div>
+          <div class="callout callout-red" style="margin:0;">
+            <div class="callout-title">🛑 Bottleneck: loop is hidden</div>
+            <ul>
+              <li>Beginners don't see where gradients/updates happen — it's all inside <code class="inline">fit()</code></li>
+              <li>Custom research tricks (gradient clipping, multi-loss) require dropping out of <code class="inline">fit()</code></li>
+              <li>Debugging is indirect if you don't know what the loop is doing</li>
+            </ul>
+            <p style="font-size:.82rem;margin-top:8px;font-weight:600;">So the next era… emphasized <strong>explicit control + dynamic graphs</strong> while keeping autograd.</p>
+          </div>
+        </div>
+      </div>
+      <div class="era-invariants">
+        ✅ Tensor shapes &nbsp;·&nbsp; ✅ Forward → loss → backward → update &nbsp;·&nbsp; ✅ Embeddings = lookup table
+        &nbsp;&nbsp;&nbsp;
+        <span style="color:var(--gray-500);"><code class="inline">layers.Embedding</code> ↔ <code class="inline">nn.Embedding</code> &nbsp;·&nbsp; <code class="inline">fit()</code> ↔ explicit loop</span>
+      </div>
+    </div><!-- /era-keras -->
+
+    <!-- ─── Era 4: Eager / Define-by-run ─── -->
+    <div id="era-eager" class="era-card">
+      <div class="era-header">
+        <span class="era-badge eager-badge">Era 4</span>
+        <div class="era-title">Eager / Define-by-run (Chainer, TF2 eager mode)</div>
+        <div class="era-years">≈ 2015 – present</div>
+      </div>
+      <div class="era-body">
+        <div class="era-tagline">"What you run is what you build — Pythonic control flow."</div>
+
+        <!-- Row A -->
+        <div class="two-col">
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--gray-500);margin-bottom:6px;">WHAT WAS PAINFUL BEFORE</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li>Static graphs make debugging indirect — errors appear at runtime, not where you wrote the code</li>
+              <li>Regular Python loops and conditionals can't be used naturally in graph-first style</li>
+            </ul>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--green);margin-bottom:6px;">✨ SUPERPOWER ADDED</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li><strong>Dynamic / eager execution:</strong> ops run immediately, graph is built as you go</li>
+              <li>Use any Python control flow (if/for/while) naturally — no graph-building overhead</li>
+            </ul>
+          </div>
+        </div>
+        <div class="chip-row" style="margin-top:12px;">
+          <span class="chip chip-green">eager execution</span>
+          <span class="chip">dynamic graph</span>
+          <span class="chip">define-by-run</span>
+          <span class="chip chip-blue">GradientTape</span>
+          <span class="chip">Pythonic debugging</span>
+        </div>
+
+        <!-- Row B -->
+        <div class="era-row-b" style="margin-top:20px;">
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Flow — run forward, graph recorded on the fly</p>
+            <pre class="mermaid">
+flowchart LR
+  A["Run forward\nin Python\n(ops execute immediately)"] --> B["Graph recorded\ndynamically\n(autograd tracks ops)"] --> C["loss.backward()\nor tape.gradient()\ncomputes grads"]
+            </pre>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Code — eager autograd in PyTorch (raw tensors)</p>
+            <div class="code-wrap">
+              <pre><code>import torch
+
+# A tiny linear model: logits = x @ W + b
+x = torch.randn(4, 3)                        # (B=4, d_in=3)
+W = torch.randn(3, 2, requires_grad=True)    # (d_in, C)
+b = torch.zeros(2,   requires_grad=True)     # (C,)
+
+logits = x @ W + b                           # forward (eager)
+loss   = (logits ** 2).mean()                # any scalar loss
+loss.backward()                              # autograd computes dW, db
+
+with torch.no_grad():                        # update step
+    W -= 0.1 * W.grad
+    b -= 0.1 * b.grad
+    W.grad.zero_(); b.grad.zero_()
+
+print("loss", float(loss))</code></pre>
+            </div>
+            <ul style="font-size:.82rem;color:var(--gray-700);padding-left:18px;margin-top:8px;">
+              <li><code class="inline">requires_grad=True</code> tells autograd to track operations on that tensor</li>
+              <li>The forward pass is normal Python; ops are recorded for backprop automatically</li>
+              <li><code class="inline">loss.backward()</code> computes gradients for every tracked parameter</li>
+              <li>The update runs inside <code class="inline">no_grad()</code> so the update itself isn't tracked</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Row C -->
+        <div class="era-row-c">
+          <div class="card" style="border-color:var(--green-light);background:var(--green-light);">
+            <div class="card-title" style="color:var(--green);">✅ What got easier</div>
+            <ul>
+              <li>Debugging is <strong>natural Python</strong> — print, breakpoint, inspect</li>
+              <li>Control flow (if/for/while) works without special graph ops</li>
+              <li>Research iteration is much faster</li>
+            </ul>
+          </div>
+          <div class="callout callout-red" style="margin:0;">
+            <div class="callout-title">🛑 Bottleneck: performance at scale</div>
+            <ul>
+              <li>Eager mode historically harder to match static-graph compiler optimizations</li>
+              <li>Very large models: memory, speed, and distributed training become bottlenecks</li>
+            </ul>
+            <p style="font-size:.82rem;margin-top:8px;font-weight:600;">So the next era… kept eager ergonomics and added <strong>compilers and explicit training loops</strong> (PyTorch mainstream).</p>
+          </div>
+        </div>
+      </div>
+      <div class="era-invariants">
+        ✅ Tensor shapes &nbsp;·&nbsp; ✅ Forward → loss → backward → update &nbsp;·&nbsp; ✅ Embeddings = lookup table
+        &nbsp;&nbsp;&nbsp;
+        <span style="color:var(--gray-500);"><code class="inline">GradientTape</code> ↔ <code class="inline">loss.backward()</code></span>
+      </div>
+    </div><!-- /era-eager -->
+
+    <!-- ─── Era 5: PyTorch Mainstream ─── -->
+    <div id="era-pytorch" class="era-card">
+      <div class="era-header">
+        <span class="era-badge pytorch-badge">Era 5</span>
+        <div class="era-title">PyTorch Mainstream</div>
+        <div class="era-years">≈ 2016 – present</div>
+      </div>
+      <div class="era-body">
+        <div class="era-tagline">"Autograd + explicit loops: great for learning and customization."</div>
+
+        <!-- Row A -->
+        <div class="two-col">
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--gray-500);margin-bottom:6px;">WHAT WAS PAINFUL BEFORE</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li>High-level APIs hid the training loop — hard to customize or debug deeply</li>
+              <li>Research code needed maximum flexibility: weird loss functions, multi-optimizer tricks, custom backward passes</li>
+            </ul>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--blue);margin-bottom:6px;">✨ SUPERPOWER ADDED</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li><strong>Explicit, readable training loop</strong> — every step is in your code</li>
+              <li>Strong eager autograd: <code class="inline">loss.backward()</code> just works, on any computation</li>
+            </ul>
+          </div>
+        </div>
+        <div class="chip-row" style="margin-top:12px;">
+          <span class="chip chip-blue">nn.Module</span>
+          <span class="chip chip-blue">nn.Embedding</span>
+          <span class="chip">DataLoader</span>
+          <span class="chip chip-purple">loss.backward()</span>
+          <span class="chip">opt.zero_grad()</span>
+          <span class="chip">opt.step()</span>
+          <span class="chip">model.train() / .eval()</span>
+          <span class="chip">.to(device)</span>
+        </div>
+
+        <!-- Row B -->
+        <div class="era-row-b" style="margin-top:20px;">
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Flow — forward records graph → backward → step</p>
+            <pre class="mermaid">
+flowchart TB
+  A["DataLoader\nbatch (x, y)"] --> B["model(x)\nforward — graph recorded"]
+  B --> C["loss_fn(logits, y)\nscalar"]
+  C --> D["loss.backward()\ngrads computed"]
+  D --> E["opt.step()\nparams updated"]
+  E --> F["opt.zero_grad()\nreset for next batch"]
+  F --> A
+            </pre>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Code — full PyTorch text classifier</p>
+            <div class="code-wrap">
+              <pre><code>import torch, torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset
+
+class TextClassifier(nn.Module):
+    def __init__(self, V, D, C):
+        super().__init__()
+        self.emb  = nn.Embedding(V, D)   # (V,D)
+        self.fc1  = nn.Linear(D, 64)
+        self.relu = nn.ReLU()
+        self.fc2  = nn.Linear(64, C)     # logits
+
+    def forward(self, x):               # x: (B,T)
+        h = self.emb(x).mean(dim=1)     # (B,D)
+        return self.fc2(self.relu(self.fc1(h)))
+
+device  = "cuda" if torch.cuda.is_available() else "cpu"
+model   = TextClassifier(20_000, 128, 2).to(device)
+loss_fn = nn.CrossEntropyLoss()        # expects logits
+opt     = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+for x_b, y_b in loader:
+    x_b, y_b = x_b.to(device), y_b.to(device)
+    opt.zero_grad()                    # 0) reset
+    logits = model(x_b)               # 1) forward
+    loss   = loss_fn(logits, y_b)     # 2) loss
+    loss.backward()                   # 3) backward
+    opt.step()                        # 4) update</code></pre>
+            </div>
+            <ul style="font-size:.82rem;color:var(--gray-700);padding-left:18px;margin-top:8px;">
+              <li>The 4-step loop is <strong>written by you</strong> — nothing hidden</li>
+              <li><code class="inline">nn.Module.forward()</code> is called when you do <code class="inline">model(x)</code></li>
+              <li>Device handling is explicit: <code class="inline">.to(device)</code> on model and data</li>
+              <li>Easy to add logging, gradient clipping, or custom logic between steps</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Row C -->
+        <div class="era-row-c">
+          <div class="card" style="border-color:var(--green-light);background:var(--green-light);">
+            <div class="card-title" style="color:var(--green);">✅ What got easier</div>
+            <ul>
+              <li><strong>Full transparency:</strong> every training step is readable Python</li>
+              <li>Research-friendly: custom losses, optimizers, multi-task setups</li>
+              <li>Became the <strong>GenAI ecosystem default</strong> — Hugging Face, diffusers, vLLM all PyTorch-first</li>
+            </ul>
+          </div>
+          <div class="callout callout-red" style="margin:0;">
+            <div class="callout-title">🛑 Bottleneck: performance at scale</div>
+            <ul>
+              <li>Very large models (LLMs, billion+ params): eager execution leaves performance on the table</li>
+              <li>Distributed training, quantization, and inference optimization need extra tooling</li>
+            </ul>
+            <p style="font-size:.82rem;margin-top:8px;font-weight:600;">So the next era… added <strong>compilation</strong> to keep eager ergonomics while closing the performance gap.</p>
+          </div>
+        </div>
+      </div>
+      <div class="era-invariants">
+        ✅ Tensor shapes &nbsp;·&nbsp; ✅ Forward → loss → backward → update &nbsp;·&nbsp; ✅ Embeddings = lookup table
+        &nbsp;&nbsp;&nbsp;
+        <span style="color:var(--gray-500);"><code class="inline">layers.Embedding</code> ↔ <code class="inline">nn.Embedding</code> &nbsp;·&nbsp; <code class="inline">model.fit()</code> ↔ <code class="inline">for batch in loader: …</code></span>
+      </div>
+    </div><!-- /era-pytorch -->
+
+    <!-- ─── Era 6: Compilation era ─── -->
+    <div id="era-compile" class="era-card">
+      <div class="era-header">
+        <span class="era-badge compile-badge">Era 6</span>
+        <div class="era-title">Compilation Era (torch.compile, XLA / JAX)</div>
+        <div class="era-years">≈ 2020 – present</div>
+      </div>
+      <div class="era-body">
+        <div class="era-tagline">"Keep eager ergonomics, add compiler optimizations for speed."</div>
+
+        <!-- Row A -->
+        <div class="two-col">
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--gray-500);margin-bottom:6px;">WHAT WAS PAINFUL BEFORE</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li>Eager execution is easy to write but leaves GPU performance on the table for large models</li>
+              <li>Going fast meant switching back to graph-first tools — losing the friendly debugging experience</li>
+            </ul>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:700;color:var(--purple);margin-bottom:6px;">✨ SUPERPOWER ADDED</p>
+            <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+              <li>One-line compilation: <strong>write eager, run fast</strong> (best of both worlds)</li>
+              <li>Compiler fuses ops, reduces memory movement, and optimizes for the hardware</li>
+            </ul>
+          </div>
+        </div>
+        <div class="chip-row" style="margin-top:12px;">
+          <span class="chip chip-purple">torch.compile</span>
+          <span class="chip">XLA</span>
+          <span class="chip">JAX jit</span>
+          <span class="chip">op fusion</span>
+          <span class="chip">dynamic shapes</span>
+          <span class="chip">triton kernels</span>
+        </div>
+
+        <!-- Row B -->
+        <div class="era-row-b" style="margin-top:20px;">
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Flow — write eager, compile for production</p>
+            <pre class="mermaid">
+flowchart LR
+  A["Write model\nin eager PyTorch\n(normal code)"] --> B["torch.compile(model)\none line — optional"]
+  B --> C["Dynamo traces\nPython bytecode"]
+  C --> D["Inductor / Triton\ngenerates fast GPU kernels"]
+  D --> E["Run fast\n(same results, more speed)"]
+            </pre>
+          </div>
+          <div>
+            <p style="font-size:.82rem;font-weight:600;margin-bottom:8px;">Code — one-line compilation</p>
+            <div class="code-wrap">
+              <pre><code>import torch
+
+# Define model exactly as in Era 5 (eager) ...
+model = TextClassifier(20_000, 128, 2).to(device)
+
+# ── The only change: wrap with torch.compile ──
+model = torch.compile(model)   # PyTorch >= 2.0
+
+# Training loop is IDENTICAL to Era 5
+for x_b, y_b in loader:
+    opt.zero_grad()
+    logits = model(x_b)       # runs compiled kernel
+    loss   = loss_fn(logits, y_b)
+    loss.backward()
+    opt.step()
+
+# Compilation is OPTIONAL — eager still works fine
+# for development and debugging</code></pre>
+            </div>
+            <ul style="font-size:.82rem;color:var(--gray-700);padding-left:18px;margin-top:8px;">
+              <li>Compilation is <strong>a one-line addition</strong> — no rewrite required</li>
+              <li>First batch is slower (tracing); subsequent batches are faster</li>
+              <li>Eager remains the <strong>dev-friendly baseline</strong> — compile for training at scale</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Row C -->
+        <div class="era-row-c">
+          <div class="card" style="border-color:var(--green-light);background:var(--green-light);">
+            <div class="card-title" style="color:var(--green);">✅ What got easier</div>
+            <ul>
+              <li>No tradeoff between <strong>developer experience and performance</strong></li>
+              <li>Standard PyTorch code gains speed without rewriting</li>
+              <li>Direction of the ecosystem: all major models adopt <code class="inline">torch.compile</code></li>
+            </ul>
+          </div>
+          <div class="callout callout-amber" style="margin:0;">
+            <div class="callout-title">⚠️ Still maturing — watch for edge cases</div>
+            <ul>
+              <li>Dynamic shapes and complex control flow can cause recompilation</li>
+              <li>Debugging compiled code is harder — fall back to eager when needed</li>
+              <li>Tradeoff: compilation overhead on first run</li>
+            </ul>
+            <p style="font-size:.82rem;margin-top:8px;font-weight:600;">Direction: <strong>best of both worlds</strong> — keep writing eager, let the compiler do the rest.</p>
+          </div>
+        </div>
+      </div>
+      <div class="era-invariants">
+        ✅ Tensor shapes &nbsp;·&nbsp; ✅ Forward → loss → backward → update &nbsp;·&nbsp; ✅ Embeddings = lookup table
+        &nbsp;&nbsp;&nbsp;
+        <span style="color:var(--gray-500);">Compilation is additive — all Era 5 concepts still apply unchanged.</span>
+      </div>
+    </div><!-- /era-compile -->
+
+  </section>
+
+  <hr class="section-sep" />
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION I — KERAS vs PYTORCH
+  ═══════════════════════════════════════════════════════ -->
+  <section id="sec-compare" class="section" data-nav-section>
+    <span class="you-are-here">Section I · Keras vs PyTorch</span>
+    <h2 class="section-title">Keras ↔ PyTorch: Concept Mapping</h2>
+    <p class="section-subtitle">Same ideas — different ergonomics. Use this table whenever you see unfamiliar syntax.</p>
+
+    <div class="chip-row" style="margin-bottom:20px;">
+      <span class="chip chip-blue">Concepts transfer. Syntax changes.</span>
+      <span class="chip chip-purple">Keras hides the loop; PyTorch shows it.</span>
+    </div>
+
+    <!-- I0 — Concept mapping table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Concept</th>
+            <th>Keras / TF-Keras</th>
+            <th>PyTorch</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Tensor</td><td><code class="inline">tf.Tensor</code></td><td><code class="inline">torch.Tensor</code></td></tr>
+          <tr><td>Layer building blocks</td><td><code class="inline">tf.keras.layers.*</code></td><td><code class="inline">torch.nn.*</code></td></tr>
+          <tr><td>Model container</td><td><code class="inline">tf.keras.Model</code> / <code class="inline">Sequential</code></td><td><code class="inline">nn.Module</code></td></tr>
+          <tr><td>Embedding layer</td><td><code class="inline">layers.Embedding(V, D)</code></td><td><code class="inline">nn.Embedding(V, D)</code></td></tr>
+          <tr><td>Mean-pool over sequence</td><td><code class="inline">GlobalAveragePooling1D()</code></td><td><code class="inline">h.mean(dim=1)</code></td></tr>
+          <tr><td>Forward call</td><td><code class="inline">logits = model(x)</code></td><td><code class="inline">logits = model(x)</code> inside <code class="inline">forward()</code></td></tr>
+          <tr><td>Training loop</td><td><code class="inline">model.compile(); model.fit()</code></td><td>explicit loop: forward → loss → backward → step</td></tr>
+          <tr><td>Autograd</td><td>inside <code class="inline">fit()</code> (or <code class="inline">GradientTape</code>)</td><td><code class="inline">loss.backward()</code></td></tr>
+          <tr><td>Optimizer</td><td><code class="inline">optimizer="adam"</code></td><td><code class="inline">torch.optim.Adam(model.parameters(), lr=...)</code></td></tr>
+          <tr><td>Reset gradients</td><td>automatic inside <code class="inline">fit()</code></td><td><code class="inline">opt.zero_grad()</code> — must call explicitly</td></tr>
+          <tr><td>Device placement</td><td>mostly implicit</td><td>explicit <code class="inline">.to(device)</code></td></tr>
+          <tr><td>Train / eval mode</td><td><code class="inline">model.trainable</code> + callbacks</td><td><code class="inline">model.train()</code> / <code class="inline">model.eval()</code></td></tr>
+          <tr><td>Saving</td><td><code class="inline">model.save(...)</code></td><td><code class="inline">torch.save(model.state_dict(), path)</code></td></tr>
+          <tr><td>Data pipeline</td><td><code class="inline">tf.data.Dataset</code> + <code class="inline">.batch()</code></td><td><code class="inline">Dataset</code> + <code class="inline">DataLoader</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout" style="margin-top:8px;">
+      Same steps exist in both. Keras often <strong>hides</strong> them; PyTorch often <strong>shows</strong> them.
+    </div>
+
+    <!-- I1 — Decision matrix -->
+    <h3 style="font-size:1rem;font-weight:700;margin:36px 0 12px;">Decision matrix — fit-for-purpose (not a framework war)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Decision factor</th>
+            <th>Keras / TF-Keras</th>
+            <th>PyTorch</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Fast beginner ramp</td><td>✅ very friendly</td><td>✅ friendly (more explicit)</td></tr>
+          <tr><td>Seeing the training loop</td><td>⚠️ hidden by default inside <code class="inline">fit()</code></td><td>✅ explicit by default</td></tr>
+          <tr><td>Custom research logic</td><td>✅ possible (custom <code class="inline">train_step</code>)</td><td>✅ very natural</td></tr>
+          <tr><td>Debugging with Python tools</td><td>✅ good (TF2 eager)</td><td>✅ excellent</td></tr>
+          <tr><td>GenAI ecosystem defaults</td><td>✅ common</td><td>✅ <strong>dominant default</strong></td></tr>
+          <tr><td>Performance direction</td><td>✅ XLA / compilers exist</td><td>✅ <code class="inline">torch.compile</code> + Triton</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:.78rem;color:var(--gray-400);margin-top:6px;">
+      Note: Older graph-first styles (TF1-era sessions, Theano) are mainly useful for <em>reading legacy code</em> — not recommended for new GenAI work.
+    </p>
+
+    <!-- I2 — Scenario cards -->
+    <h3 style="font-size:1rem;font-weight:700;margin:36px 0 12px;">"When to use what?" — scenario guide</h3>
+    <div class="card-grid card-grid-2">
+
+      <div class="card" style="border-left:4px solid var(--blue);">
+        <div class="card-title">🎓 You're learning fundamentals (this course)</div>
+        <div style="margin:6px 0 8px;"><span class="chip chip-blue">Default: PyTorch</span></div>
+        <ul>
+          <li>One consistent end-to-end style throughout the course</li>
+          <li>Explicit loop helps you <em>internalise</em> forward → loss → backward → update</li>
+        </ul>
+        <p style="font-size:.78rem;color:var(--gray-400);margin-top:8px;">Watch for: device + dtype handling early on</p>
+      </div>
+
+      <div class="card" style="border-left:4px solid var(--red);">
+        <div class="card-title">⚡ You need the fastest prototype with minimal code</div>
+        <div style="margin:6px 0 8px;"><span class="chip chip-red" style="background:var(--red-light);color:var(--red);border-color:#FECACA;">Default: Keras</span></div>
+        <ul>
+          <li>Compact model definition + <code class="inline">fit()</code> in under 10 lines</li>
+          <li>Great for standard pipelines with known architectures</li>
+        </ul>
+        <p style="font-size:.78rem;color:var(--gray-400);margin-top:8px;">Watch for: understand what <code class="inline">fit()</code> is doing — don't treat it as magic</p>
+      </div>
+
+      <div class="card" style="border-left:4px solid var(--purple);">
+        <div class="card-title">🔬 Custom fine-tuning tricks / research training</div>
+        <div style="margin:6px 0 8px;"><span class="chip chip-purple">Default: PyTorch</span></div>
+        <ul>
+          <li>Custom loops are the norm — easy to insert logging, conditional steps, gradient tricks</li>
+          <li>Most research papers release PyTorch reference implementations</li>
+        </ul>
+        <p style="font-size:.78rem;color:var(--gray-400);margin-top:8px;">Watch for: reproducibility, zero_grad, eval mode</p>
+      </div>
+
+      <div class="card" style="border-left:4px solid var(--green);">
+        <div class="card-title">🏗️ Your org already has a TensorFlow production stack</div>
+        <div style="margin:6px 0 8px;"><span class="chip chip-green">Default: Keras / TF-Keras</span></div>
+        <ul>
+          <li>Smoother integration with existing infra and deployment conventions</li>
+          <li>Shared tooling (TFX, VertexAI, TF Serving)</li>
+        </ul>
+        <p style="font-size:.78rem;color:var(--gray-400);margin-top:8px;">Watch for: keep training logic readable; avoid TF1-era patterns</p>
+      </div>
+
+      <div class="card" style="border-left:4px solid var(--amber);grid-column:1/-1;">
+        <div class="card-title">📚 Reading old research papers or legacy repos (TF1, Theano)</div>
+        <div style="margin:6px 0 8px;"><span class="chip" style="background:#FEF9C3;color:#854D0E;border-color:#FDE047;">Don't adopt the stack — translate the concepts</span></div>
+        <ul>
+          <li>Graph-first syntax is <strong>not recommended</strong> for new work — study it only to understand what it is doing</li>
+          <li>Map <code class="inline">session.run()</code> → eager forward pass, <code class="inline">placeholder</code> → input tensor, <code class="inline">grad()</code> → <code class="inline">loss.backward()</code></li>
+          <li>Once you recognize the 7 invariant jobs, the syntax differences shrink dramatically</li>
+        </ul>
+        <p style="font-size:.78rem;color:var(--gray-400);margin-top:8px;">Goal: read confidently, don't rewrite your new projects in old-style code</p>
+      </div>
+
+    </div><!-- /scenario cards -->
+
+    <!-- Learner conclusion -->
+    <div class="callout callout-green" style="margin-top:24px;">
+      <div class="callout-title">✅ Practical conclusion for this course</div>
+      <ul>
+        <li><strong>For new GenAI work in this course</strong> → we standardize on <strong>PyTorch</strong></li>
+        <li>Keras today is a <em>sample</em>; your goal is to recognize the <strong>invariants</strong></li>
+        <li>If you can map one toy model from Keras to PyTorch, you can translate almost everything you'll see later</li>
+      </ul>
+    </div>
+
+  </section>
+
+  <hr class="section-sep" />
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION J — WHY PYTORCH
+  ═══════════════════════════════════════════════════════ -->
+  <section id="sec-why-pytorch" class="section" data-nav-section>
+    <div class="section-banner" style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);">
+      <div class="section-banner-text">
+        <span class="section-number">J</span>
+        <h2>Why PyTorch Became the Ecosystem Default</h2>
+        <p>Four forces that made PyTorch the dominant choice for modern GenAI research and production.</p>
+      </div>
+    </div>
+
+    <div class="card-grid card-grid-4">
+
+      <div class="card" style="border-top:4px solid var(--blue);">
+        <div style="font-size:2rem;margin-bottom:12px;">🐍</div>
+        <div class="card-title">Pythonic debugging</div>
+        <p>Eager execution means you get a real Python stack trace on every error. No session.run() mystery — insert <code class="inline">print()</code> or a breakpoint anywhere in the forward pass.</p>
+        <div style="margin-top:10px;"><span class="chip chip-blue">eager mode</span> <span class="chip chip-blue">debuggable</span></div>
+      </div>
+
+      <div class="card" style="border-top:4px solid var(--purple);">
+        <div style="font-size:2rem;margin-bottom:12px;">🔁</div>
+        <div class="card-title">Explicit, readable training loops</div>
+        <p>The <code class="inline">for batch in loader</code> loop is plain Python — you can see exactly where gradients flow, clip them, log intermediate tensors, or break early. No hidden callbacks.</p>
+        <div style="margin-top:10px;"><span class="chip chip-purple">transparent</span> <span class="chip chip-purple">extensible</span></div>
+      </div>
+
+      <div class="card" style="border-top:4px solid var(--green);">
+        <div style="font-size:2rem;margin-bottom:12px;">🤗</div>
+        <div class="card-title">Ecosystem momentum</div>
+        <p>Hugging Face Transformers, PEFT, trl, diffusers — virtually all frontier GenAI libraries default to PyTorch. Papers release PyTorch checkpoints first. The network effect is decisive.</p>
+        <div style="margin-top:10px;"><span class="chip chip-green">HuggingFace</span> <span class="chip chip-green">research default</span></div>
+      </div>
+
+      <div class="card" style="border-top:4px solid var(--amber);">
+        <div style="font-size:2rem;margin-bottom:12px;">🚀</div>
+        <div class="card-title">Performance trajectory</div>
+        <p><code class="inline">torch.compile</code> brings graph-level optimization without abandoning eager UX. PyTorch 2+ narrows the performance gap with compiled frameworks while keeping the debugging story intact.</p>
+        <div style="margin-top:10px;"><span class="chip" style="background:#FEF9C3;color:#854D0E;border-color:#FDE047;">torch.compile</span> <span class="chip" style="background:#FEF9C3;color:#854D0E;border-color:#FDE047;">PT2</span></div>
+      </div>
+
+    </div><!-- /card-grid-4 -->
+
+    <!-- ergonomics scatter embed -->
+    <div class="plot-wrap" style="margin-top:28px;">
+      <img src="assets/plots/tradeoff_scatter.png"
+           alt="Scatter of framework ergonomics vs control (run make_plots.py to generate)"
+           style="max-width:520px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.12);" />
+      <p style="font-size:.78rem;color:var(--gray-400);margin-top:6px;">
+        Illustrative tradeoff scatter — run <code class="inline">python scripts/make_plots.py</code> to regenerate.
+      </p>
+    </div>
+
+    <!-- cognitive load bar chart embed -->
+    <div class="plot-wrap" style="margin-top:20px;">
+      <img src="assets/plots/cognitive_load.png"
+           alt="Cognitive-load bar chart per era (run make_plots.py to generate)"
+           style="max-width:520px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.12);" />
+      <p style="font-size:.78rem;color:var(--gray-400);margin-top:6px;">
+        Subjective cognitive load per era — based on typical learner feedback across lab sessions.
+      </p>
+    </div>
+
+    <!-- J.2 — Why iteration feels faster -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">Why it feels faster to iterate</h3>
+    <pre class="mermaid">
+flowchart LR
+  I[Idea] --> C["Code in Python\n(nn.Module + loop)"]
+  C --> D["Debug quickly\n(print / breakpoints)"]
+  D --> R["Run experiments\n(change 1 thing)"]
+  R --> I
+    </pre>
+
+    <!-- J.3 — Customisation example: gradient clipping -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">One concrete customisation — gradient clipping in one line</h3>
+    <div class="two-col">
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--blue);margin-bottom:6px;">PyTorch — add clipping between backward and step</p>
+        <div class="code-wrap">
+          <pre><code>loss.backward()
+torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+opt.step()</code></pre>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;">
+        <ul style="font-size:.85rem;color:var(--gray-700);padding-left:18px;">
+          <li>The training loop is explicit, so you can <strong>insert one line</strong> between any two steps.</li>
+          <li>In high-level <code class="inline">fit()</code> flows this is still possible, but requires a custom training step override.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:24px;">
+      <div class="callout-title">Key insight</div>
+      <p>PyTorch did not "win" by being intrinsically superior in every dimension. It won because it removed the feedback-loop friction that research requires: write → crash → fix → understand. That tight loop builds intuition far faster than inspecting computation graphs.</p>
+    </div>
+
+    <!-- J5 — Debugging comparison: graph-first vs eager -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">What "Pythonic debugging" actually means in practice</h3>
+    <div class="two-col">
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--amber);margin-bottom:6px;">Graph-first (TF 1.x / Theano) — debugging is indirect</p>
+        <div class="code-wrap">
+          <pre><code># You can't print inside the graph definition
+x       = tf.placeholder(tf.float32, [None, D])
+h       = tf.matmul(x, W) + b     # symbolic — no value yet
+logits  = tf.nn.relu(h)
+
+# Can't do: print(h)  — it's just a symbol
+# Must run a session to see any value:
+with tf.Session() as sess:
+    h_val = sess.run(h, feed_dict={x: my_batch})
+    print(h_val)  # only now do you see numbers
+
+# Error location is often deep inside session.run(),
+# not near the line that caused the problem.</code></pre>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--blue);margin-bottom:6px;">PyTorch (eager) — debug like normal Python</p>
+        <div class="code-wrap">
+          <pre><code>import torch, torch.nn as nn
+
+W = nn.Linear(D, 64)
+x = torch.randn(4, D)
+
+h = W(x)
+print(h.shape)      # (4, 64) — printed immediately
+print(h.mean())     # works — real value, right now
+
+# Put a breakpoint anywhere in forward():
+class MyModel(nn.Module):
+    def forward(self, x):
+        h = self.fc(x)
+        breakpoint()  # interactive debug session here
+        return self.out(h)
+
+# Errors show you the exact Python line
+# where the shape mismatch happened.</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="chip-row" style="margin-top:8px;">
+      <span class="chip chip-blue">print() works anywhere</span>
+      <span class="chip chip-blue">breakpoint() works anywhere</span>
+      <span class="chip chip-purple">shape errors point to the right line</span>
+    </div>
+
+    <div class="section-bridge">→ Next: what this means for the rest of this course</div>
+  </section>
+
+  <hr class="section-sep" />
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION K — COURSE NOTE
+  ═══════════════════════════════════════════════════════ -->
+  <section id="sec-course" class="section" data-nav-section>
+    <div class="section-banner" style="background:linear-gradient(135deg,#064E3B 0%,#065F46 100%);margin-bottom:28px;">
+      <div class="section-banner-text">
+        <span class="section-number">K</span>
+        <h2>Course Roadmap &amp; Your Next Steps</h2>
+        <p>How the two frameworks fit into what you'll build in this programme.</p>
+      </div>
+    </div>
+
+    <!-- Three-column course-note layout -->
+    <div class="course-note-banner">
+
+      <div class="course-note-col">
+        <div style="font-size:1.6rem;margin-bottom:8px;">📒</div>
+        <div class="course-note-label">Today — Keras notebook</div>
+        <p>We use Keras as a <em>learning scaffold</em>: compact syntax exposes the invariant concepts without obscuring them with boilerplate. Your job is to see <strong>through</strong> the API to the underlying training loop.</p>
+        <ul style="margin-top:8px;font-size:.85rem;">
+          <li>Dataset → batching → model → compile → fit</li>
+          <li>Validation split, callbacks</li>
+          <li>Named concepts: <code class="inline">loss</code>, <code class="inline">optimizer</code>, <code class="inline">metrics</code></li>
+        </ul>
+      </div>
+
+      <div class="course-note-col" style="border-left:1px solid rgba(255,255,255,.15);border-right:1px solid rgba(255,255,255,.15);padding:0 24px;">
+        <div style="font-size:1.6rem;margin-bottom:8px;">🔦</div>
+        <div class="course-note-label">From next module — PyTorch only</div>
+        <p>All subsequent notebooks use PyTorch. You will write explicit loops, manage devices, and call <code class="inline">optimizer.zero_grad()</code> yourself — because that explicitness <em>teaches</em> you what the framework is doing.</p>
+        <ul style="margin-top:8px;font-size:.85rem;">
+          <li>Dataset / DataLoader</li>
+          <li>nn.Module → forward()</li>
+          <li>Manual train / eval loop</li>
+          <li>torch.save / torch.load checkpoints</li>
+        </ul>
+      </div>
+
+      <div class="course-note-col">
+        <div style="font-size:1.6rem;margin-bottom:8px;">🎯</div>
+        <div class="course-note-label">The real goal — one mental model</div>
+        <p>If you can fluently map a Keras model to an equivalent PyTorch implementation, you can read <em>any</em> modern deep-learning codebase — from a 3-year-old research paper to the latest Hugging Face trainer.</p>
+        <ul style="margin-top:8px;font-size:.85rem;">
+          <li>Identify the invariants (7 jobs never change)</li>
+          <li>Translate syntax, not concepts</li>
+          <li>Read new frameworks with confidence</li>
+        </ul>
+      </div>
+
+    </div><!-- /course-note-banner -->
+
+    <div class="callout callout-green" style="margin-top:24px;">
+      <div class="callout-title">✨ What you should be able to do after this session</div>
+      <ol>
+        <li>Explain <strong>why</strong> manually differentiating a neural network with NumPy is educational but unscalable</li>
+        <li>Sketch the 7 conceptual jobs a training framework must handle</li>
+        <li>Describe the graph-first → eager evolution in one sentence</li>
+        <li>Translate a 3-layer text classifier between Keras and PyTorch without looking anything up</li>
+        <li>Choose greedily between Keras and PyTorch given a scenario — and defend the choice</li>
+      </ol>
+    </div>
+
+    <!-- K3 — Translation exercise -->
+    <h3 style="font-size:1rem;font-weight:700;margin:32px 0 12px;">✏️ Try it yourself — translate this Keras snippet to PyTorch</h3>
+    <div class="two-col">
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--red);margin-bottom:6px;">Keras (given)</p>
+        <div class="code-wrap">
+          <pre><code>import tensorflow as tf
+from tensorflow.keras import layers
+
+model = tf.keras.Sequential([
+    layers.Embedding(10_000, 64),
+    layers.GlobalAveragePooling1D(),
+    layers.Dense(32, activation="relu"),
+    layers.Dense(2)        # logits
+])
+model.compile(
+    optimizer="adam",
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(
+        from_logits=True),
+    metrics=["accuracy"])
+model.fit(train_ds, epochs=5,
+          validation_data=val_ds)</code></pre>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:.82rem;font-weight:600;color:var(--blue);margin-bottom:6px;">PyTorch (write this yourself)</p>
+        <div class="code-wrap">
+          <pre><code>import torch, torch.nn as nn
+
+# 1) Define the model class
+class MyModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # ← fill in layers here
+
+    def forward(self, x):
+        # ← fill in forward pass
+
+# 2) Instantiate + optimizer
+model = MyModel().to(device)
+opt   = torch.optim.Adam(model.parameters(), lr=1e-3)
+loss_fn = nn.CrossEntropyLoss()
+
+# 3) Training loop (5 epochs)
+for epoch in range(5):
+    model.train()
+    for x_b, y_b in train_loader:
+        # ← zero_grad / forward / loss / backward / step
+
+    model.eval()
+    # ← compute val accuracy</code></pre>
+        </div>
+        <p style="font-size:.78rem;color:var(--gray-400);margin-top:6px;">
+          Hint: <code class="inline">GlobalAveragePooling1D()</code> → <code class="inline">.mean(dim=1)</code> &nbsp;|&nbsp;
+          <code class="inline">Dense(n, activation="relu")</code> → <code class="inline">nn.Linear(in, n)</code> + <code class="inline">nn.ReLU()</code>
+        </p>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:48px 0 16px;">
+      <p style="font-size:1.05rem;font-weight:600;color:var(--gray-600);">Good luck. May your gradients never vanish. 🎉</p>
+      <p style="font-size:.82rem;color:var(--gray-400);margin-top:4px;">
+        Neural Networks → GenAI · IISc × TalentSprint · GenAI Cohort 2
+      </p>
+    </div>
+
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
