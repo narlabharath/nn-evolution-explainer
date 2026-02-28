@@ -643,6 +643,37 @@ model.fit(train_ds, epochs=3)
       <div class="plot-caption">Illustrative / conceptual — not real measurements. Generate via: <code>python scripts/make_plots.py</code></div>
     </div>
 
+    <!-- E6b — Loss curve reading guide -->
+    <div class="table-wrap" style="margin-top:12px;">
+      <table>
+        <thead>
+          <tr><th>What you see</th><th>What it means</th><th>Likely cause</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>📉 Smoothly descending</td>
+            <td style="color:var(--green);"><strong>Working correctly</strong></td>
+            <td>Good learning rate, correct loss, correct loop</td>
+          </tr>
+          <tr>
+            <td>➡️ Flat from the start</td>
+            <td style="color:var(--amber);"><strong>Not learning</strong></td>
+            <td>LR too low, bug in backward, gradients not flowing</td>
+          </tr>
+          <tr>
+            <td>📈 Rising or exploding</td>
+            <td style="color:var(--red);"><strong>Unstable</strong></td>
+            <td>LR too high, missing <code class="inline">zero_grad()</code>, wrong loss function</td>
+          </tr>
+          <tr>
+            <td>🔀 NaN after a few steps</td>
+            <td style="color:var(--red);"><strong>Numerical overflow</strong></td>
+            <td>LR far too high, bad init, log(0) in loss</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- E7 — Pitfalls callout -->
     <div class="callout callout-amber" style="margin-top:8px;">
       <div class="callout-title">⚠️ Common pitfalls in training</div>
@@ -1734,6 +1765,17 @@ for x_b, y_b in loader:
           <li>Shared tooling (TFX, VertexAI, TF Serving)</li>
         </ul>
         <p style="font-size:.78rem;color:var(--gray-400);margin-top:8px;">Watch for: keep training logic readable; avoid TF1-era patterns</p>
+      </div>
+
+      <div class="card" style="border-left:4px solid var(--green);">
+        <div class="card-title">🤗 Fine-tuning a HuggingFace model for a GenAI task</div>
+        <div style="margin:6px 0 8px;"><span class="chip chip-green">Default: PyTorch</span></div>
+        <ul>
+          <li>HuggingFace Transformers, PEFT, trl all expect PyTorch-style training loops by default</li>
+          <li>Community examples, LoRA adapters, and model checkpoints are PyTorch-first</li>
+          <li>You'll write or read an explicit <code class="inline">for batch in loader</code> loop — not <code class="inline">fit()</code></li>
+        </ul>
+        <p style="font-size:.78rem;color:var(--gray-400);margin-top:8px;">This is the near-future workflow for most of you — start recognising the loop now</p>
       </div>
 
       <div class="card" style="border-left:4px solid var(--amber);grid-column:1/-1;">
