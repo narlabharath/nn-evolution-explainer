@@ -984,6 +984,48 @@ flowchart LR
       </div>
     </div>
 
+    <!-- ─── Recurring tradeoffs banner ─── -->
+    <div style="background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:24px 28px;margin-bottom:32px;">
+      <p style="font-weight:700;font-size:1rem;margin-bottom:4px;">🔁 Three tensions that repeat across every era</p>
+      <p style="font-size:.85rem;color:var(--gray-600);margin-bottom:20px;">As you read each era card, watch for the same three tradeoffs surfacing in a new form. Each era solved one side — and immediately created pressure on another.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+
+        <div style="border-left:4px solid #7c3aed;background:#f5f3ff;border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:14px 16px;">
+          <div style="font-weight:700;font-size:.9rem;color:#5b21b6;margin-bottom:6px;">① Transparency ↔ Convenience</div>
+          <p style="font-size:.82rem;color:var(--gray-700);margin-bottom:8px;">Every time a framework hid complexity, beginners benefited and researchers hit walls.</p>
+          <table style="width:100%;font-size:.78rem;border-collapse:collapse;">
+            <tr><td style="padding:3px 6px;color:var(--gray-500);">Era 1 NumPy</td><td style="padding:3px 6px;">Everything visible — everything manual</td></tr>
+            <tr><td style="padding:3px 6px;color:var(--gray-500);">Era 3 Keras</td><td style="padding:3px 6px;">Loop hidden in <code class="inline">fit()</code> — fast to start, hard to customise</td></tr>
+            <tr><td style="padding:3px 6px;color:var(--gray-500);">Era 5 PyTorch</td><td style="padding:3px 6px;">Everything visible again — by design, not by accident</td></tr>
+          </table>
+        </div>
+
+        <div style="border-left:4px solid var(--amber);background:var(--amber-light);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:14px 16px;">
+          <div style="font-weight:700;font-size:.9rem;color:#92400e;margin-bottom:6px;">② Speed ↔ Debuggability</div>
+          <p style="font-size:.82rem;color:var(--gray-700);margin-bottom:8px;">Every time the field gained speed, it became harder to see inside. Every time it became transparent, it paid in performance.</p>
+          <table style="width:100%;font-size:.78rem;border-collapse:collapse;">
+            <tr><td style="padding:3px 6px;color:var(--gray-500);">Era 2 Graph</td><td style="padding:3px 6px;">Fast — but opaque, no <code class="inline">print()</code> inside graph</td></tr>
+            <tr><td style="padding:3px 6px;color:var(--gray-500);">Era 4/5 Eager</td><td style="padding:3px 6px;">Fully debuggable — historically slower</td></tr>
+            <tr><td style="padding:3px 6px;color:var(--gray-500);">Era 6 Compile</td><td style="padding:3px 6px;">Fast again — opaque again. Use for final runs, not debugging</td></tr>
+          </table>
+        </div>
+
+        <div style="border-left:4px solid var(--blue);background:var(--blue-light);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:14px 16px;">
+          <div style="font-weight:700;font-size:.9rem;color:#1e40af;margin-bottom:6px;">③ Research ↔ Production</div>
+          <p style="font-size:.82rem;color:var(--gray-700);margin-bottom:8px;">Frameworks optimised for one audience consistently failed the other — until Era 5/6.</p>
+          <table style="width:100%;font-size:.78rem;border-collapse:collapse;">
+            <tr><td style="padding:3px 6px;color:var(--gray-500);">Era 2 Graph</td><td style="padding:3px 6px;">Built for production (TPU/GPU) — researchers hated it</td></tr>
+            <tr><td style="padding:3px 6px;color:var(--gray-500);">Era 3 Keras</td><td style="padding:3px 6px;">Built for learners — researchers hit walls quickly</td></tr>
+            <tr><td style="padding:3px 6px;color:var(--gray-500);">Era 5+6 PyTorch</td><td style="padding:3px 6px;">Research-first — then industry followed. First era to serve both</td></tr>
+          </table>
+        </div>
+
+      </div>
+
+      <p style="font-size:.82rem;color:var(--gray-500);margin-top:16px;font-style:italic;">Each era card below shows the bottleneck that made the next era necessary. These three tensions are the pattern underneath every bottleneck.</p>
+    </div>
+
     <!-- ─── Era 1: NumPy / Manual gradients ─── -->
     <div id="era-numpy" class="era-card">
       <div class="era-header">
